@@ -10,6 +10,7 @@ import java.util.List;
 /**
  * Represents a paginated response for categories.
  * This class is used to return category data with pagination details.
+ * t contains a list of {@link CategoryDTO} objects, each representing a book's data.
  */
 @Data
 @NoArgsConstructor
@@ -17,7 +18,7 @@ import java.util.List;
 public class CategoryResponse {
 
     /**
-     * List of category data transfer objects (DTOs) for the current page.
+     * A list of {@link CategoryDTO} objects representing the books on the current page.
      */
     private List<CategoryDTO> content;
 

@@ -1,13 +1,16 @@
 package com.librarymanagement.project.repositories;
 
 
+import com.librarymanagement.project.models.Book;
 import com.librarymanagement.project.models.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Repository interface for managing Category entities in the database.
- * Extends JpaRepository to provide CRUD operations.
+ * Repository interface for managing {@link Category} entities.
+ * This interface extends {@link JpaRepository} to provide basic CRUD operations and
+ * pagination support for the {@link Category} entity. Custom query methods are defined
+ * to retrieve category by name.
  */
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {

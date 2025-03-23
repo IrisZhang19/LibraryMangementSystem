@@ -18,6 +18,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service implementation for managing {@link Book} entities.
+ * This service provides methods for adding, updating, deleting, and searching for books.
+ */
 @Service
 public class BookServiceImpl implements  BookService{
     @Autowired
@@ -28,7 +32,13 @@ public class BookServiceImpl implements  BookService{
 
     @Autowired
     private ModelMapper modelMapper;
-
+    /**
+     * Adds a new book to the system and associates it with a category.
+     *
+     * @param categoryId The ID of the category the book will belong to.
+     * @param bookDTO The {@link BookDTO} containing the book details.
+     * @return The added {@link BookDTO}.
+     */
     @Override
     public BookDTO addBook(Long categoryId, BookDTO bookDTO) {
         Category category = categoryRepository.findById(categoryId)
@@ -39,6 +49,17 @@ public class BookServiceImpl implements  BookService{
         return modelMapper.map(savedBook, BookDTO.class);
     }
 
+
+    /**
+     * Retrieves a paginated list of all books in the system.
+     * The results can be sorted by a specific field and order.
+     *
+     * @param pageNumber The page number to retrieve (starting from 0).
+     * @param pageSize The number of books per page.
+     * @param sortBy The field to sort by (e.g., title, author).
+     * @param sortOrder The order of sorting, either ascending ("asc") or descending ("desc").
+     * @return A {@link BookResponse} containing the paginated book list and metadata.
+     */
     @Override
     public BookResponse getAllBooks(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Sort sortByAnyOrder = sortOrder.equalsIgnoreCase("asc")
@@ -61,6 +82,12 @@ public class BookServiceImpl implements  BookService{
         return bookResponse;
     }
 
+    /**
+     * Deletes a book from the system by its ID.
+     *
+     * @param bookId The ID of the book to delete.
+     * @return The deleted {@link BookDTO}.
+     */
     @Override
     public BookDTO deleteBook(Long bookId) {
         Book book = bookRepository.findById(bookId)
@@ -69,6 +96,13 @@ public class BookServiceImpl implements  BookService{
         return modelMapper.map(book, BookDTO.class);
     }
 
+    /**
+     * Updates the details of an existing book.
+     *
+     * @param bookId The ID of the book to update.
+     * @param bookDTO The {@link BookDTO} containing the updated book details.
+     * @return The updated {@link BookDTO}.
+     */
     @Override
     public BookDTO updateBook(Long bookId, BookDTO bookDTO) {
         // find the book
@@ -93,6 +127,16 @@ public class BookServiceImpl implements  BookService{
         return modelMapper.map(savedBook, BookDTO.class);
     }
 
+    /**
+     * Retrieves a paginated list of books by category.
+     *
+     * @param categoryId The ID of the category to filter books by.
+     * @param pageNumber The page number to retrieve (starting from 0).
+     * @param pageSize The number of books per page.
+     * @param sortBy The field to sort by (e.g., title, author).
+     * @param sortOrder The order of sorting, either ascending ("asc") or descending ("desc").
+     * @return A {@link BookResponse} containing the filtered book list and metadata.
+     */
     @Override
     public BookResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         // find the category
@@ -126,6 +170,16 @@ public class BookServiceImpl implements  BookService{
 
     }
 
+    /**
+     * Retrieves a paginated list of books by author.
+     *
+     * @param author The author's name to filter books by.
+     * @param pageNumber The page number to retrieve (starting from 0).
+     * @param pageSize The number of books per page.
+     * @param sortBy The field to sort by (e.g., title, author).
+     * @param sortOrder The order of sorting, either ascending ("asc") or descending ("desc").
+     * @return A {@link BookResponse} containing the filtered book list and metadata.
+     */
     @Override
     public BookResponse searchByAuthor(String author, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
 
@@ -151,6 +205,16 @@ public class BookServiceImpl implements  BookService{
         return bookResponse;
     }
 
+    /**
+     * Retrieves a paginated list of books by title.
+     *
+     * @param title The title or partial title to filter books by.
+     * @param pageNumber The page number to retrieve (starting from 0).
+     * @param pageSize The number of books per page.
+     * @param sortBy The field to sort by (e.g., title, author).
+     * @param sortOrder The order of sorting, either ascending ("asc") or descending ("desc").
+     * @return A {@link BookResponse} containing the filtered book list and metadata.
+     */
     @Override
     public BookResponse searchByTitle(String title, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         // construct page

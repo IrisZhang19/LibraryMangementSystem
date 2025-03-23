@@ -5,7 +5,6 @@ import com.librarymanagement.project.MzLibrarymanagementApplication;
 import com.librarymanagement.project.models.Book;
 import com.librarymanagement.project.models.Category;
 import com.librarymanagement.project.payloads.BookDTO;
-import com.librarymanagement.project.payloads.CategoryDTO;
 import com.librarymanagement.project.repositories.BookRepository;
 import com.librarymanagement.project.repositories.CategoryRepository;
 import com.librarymanagement.project.services.BookService;
@@ -48,7 +47,7 @@ public class BookServiceTest {
     }
 
     @Test
-    public void TestCreateBook(){
+    public void TestCreateBookSuccess(){
         //Set up
         Long categoryId = 1L;
         String  categoryName = "category 1";
@@ -58,7 +57,7 @@ public class BookServiceTest {
         String title = "Book 1";
         String author = "Author 1";
         BookDTO bookDTO = new BookDTO(title, author);
-        Book book = new Book(title, author);
+        Book book = new Book(bookId, title, author);
         Book savedBook = new Book(bookId, title, author, category);
         BookDTO savedBookDTO = new BookDTO(bookId, title, author, category);
 
