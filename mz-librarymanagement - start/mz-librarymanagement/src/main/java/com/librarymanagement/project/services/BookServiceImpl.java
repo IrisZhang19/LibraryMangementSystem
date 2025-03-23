@@ -13,7 +13,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,8 +43,14 @@ public class BookServiceImpl implements  BookService{
      */
     @Override
     public BookDTO addBook(Long categoryId, BookDTO bookDTO) {
+        // Check if the new name is valid
+        if (bookDTO.getTitle() == null || bookDTO.getTitle().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book title must not be empty");
+        }
+
+        // Check if the category exists
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() ->  new RuntimeException("category not exist"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found"));
         Book book = modelMapper.map(bookDTO, Book.class);
         book.setCategory(category);
         Book savedBook = bookRepository.save(book);
@@ -62,16 +70,25 @@ public class BookServiceImpl implements  BookService{
      */
     @Override
     public BookResponse getAllBooks(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+        // Set sort order
         Sort sortByAnyOrder = sortOrder.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
+
+        // Get paginated books
         Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAnyOrder);
         Page<Book> pageBooks = bookRepository.findAll(pageDetails);
-
         List<Book> books = pageBooks.getContent();
+
+        if(books.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found");
+        }
+        // Map to BookDTOs
         List<BookDTO> bookDTOS = books.stream()
                 .map(book -> modelMapper.map(book, BookDTO.class))
                 .collect(Collectors.toList());
+
+        // Construct and return BookResponse
         BookResponse bookResponse = new BookResponse();
         bookResponse.setContent(bookDTOS);
         bookResponse.setPageNumber(pageNumber);
@@ -91,7 +108,7 @@ public class BookServiceImpl implements  BookService{
     @Override
     public BookDTO deleteBook(Long bookId) {
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("book not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
         bookRepository.deleteById(bookId);
         return modelMapper.map(book, BookDTO.class);
     }
@@ -105,11 +122,16 @@ public class BookServiceImpl implements  BookService{
      */
     @Override
     public BookDTO updateBook(Long bookId, BookDTO bookDTO) {
-        // find the book
-        Book bookFromDB = bookRepository.findById(bookId)
-                .orElseThrow(()-> new RuntimeException("book not found"));
+        // Check if the new name is valid
+        if (bookDTO.getTitle() == null || bookDTO.getTitle().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book title must not be empty");
+        }
 
-        // update the properties
+        // Find the book
+        Book bookFromDB = bookRepository.findById(bookId)
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+
+        // Update the properties
         Book book = modelMapper.map(bookDTO, Book.class);
         bookFromDB.setTitle(book.getTitle());
         bookFromDB.setAuthor(book.getAuthor());
@@ -118,7 +140,7 @@ public class BookServiceImpl implements  BookService{
         bookFromDB.setCopiesAvailable(book.getCopiesAvailable());
         if(book.getCategory() != null){
             Category category = categoryRepository.findById(book.getCategory().getCategoryId())
-                    .orElseThrow( () -> new RuntimeException("category not found"));
+                    .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found"));
             bookFromDB.setCategory(category);
         }
 
@@ -139,20 +161,21 @@ public class BookServiceImpl implements  BookService{
      */
     @Override
     public BookResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        // find the category
+        // Find the category
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow( () -> new RuntimeException("category not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found"));
 
-        // construct page
+
+        // Construct page
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
         Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
 
         Page<Book> pageBooks = bookRepository.findByCategory(category, pageDetails);
-
         List<Book> books = pageBooks.getContent();
-        // construct response DTO
+
+        // Construct response DTO
         List<BookDTO> bookDTOS = books.stream()
                 .map(book -> modelMapper.map(book, BookDTO.class))
                 .collect(Collectors.toList());
@@ -163,11 +186,7 @@ public class BookServiceImpl implements  BookService{
         bookResponse.setTotalElements(pageBooks.getTotalElements());
         bookResponse.setTotalPages(pageBooks.getTotalPages());
         bookResponse.setLastPage(pageBooks.isLast());
-
         return bookResponse;
-
-
-
     }
 
     /**
@@ -182,15 +201,16 @@ public class BookServiceImpl implements  BookService{
      */
     @Override
     public BookResponse searchByAuthor(String author, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-
-        // construct page
+        // Construct page
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
         Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
 
+        // Fetch books by title
         Page<Book> pageBooks = bookRepository.findByAuthorContainingIgnoreCase(author, pageDetails);
 
+        // Construct Response and return
         List<BookDTO> bookDTOS = pageBooks.stream()
                 .map(book -> modelMapper.map(book, BookDTO.class))
                 .collect(Collectors.toList());
@@ -201,7 +221,6 @@ public class BookServiceImpl implements  BookService{
         bookResponse.setTotalElements(pageBooks.getTotalElements());
         bookResponse.setTotalPages(pageBooks.getTotalPages());
         bookResponse.setLastPage(pageBooks.isLast());
-
         return bookResponse;
     }
 
@@ -217,7 +236,7 @@ public class BookServiceImpl implements  BookService{
      */
     @Override
     public BookResponse searchByTitle(String title, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        // construct page
+        // Construct page
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
@@ -226,7 +245,7 @@ public class BookServiceImpl implements  BookService{
         // get books
         Page<Book> pageBooks = bookRepository.findByTitleLikeIgnoreCase('%' + title + '%', pageDetails);
 
-        // construct response DTO
+        // Construct Response and return
         List<BookDTO> bookDTOS = pageBooks.stream()
                 .map(book -> modelMapper.map(book, BookDTO.class))
                 .collect(Collectors.toList());
@@ -237,7 +256,6 @@ public class BookServiceImpl implements  BookService{
         bookResponse.setTotalElements(pageBooks.getTotalElements());
         bookResponse.setTotalPages(pageBooks.getTotalPages());
         bookResponse.setLastPage(pageBooks.isLast());
-
         return bookResponse;
     }
 

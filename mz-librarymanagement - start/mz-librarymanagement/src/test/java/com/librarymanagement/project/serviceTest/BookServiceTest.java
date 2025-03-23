@@ -13,8 +13,10 @@ import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -83,7 +85,7 @@ public class BookServiceTest {
     }
 
     @Test
-    public void TestCreateBookFail(){
+    public void TestCreateBookFailCategoryNotFound(){
         // Set up
         Long categoryId = 1L;
         String title = "Book 1";
@@ -94,11 +96,12 @@ public class BookServiceTest {
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
         // Execute & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
             bookService.addBook(categoryId, bookDTO);
         });
 
-        assertEquals("category not exist", exception.getMessage());
+        assertEquals("No categories found", exception.getReason());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
 
         // Verify
         verify(categoryRepository, times(1)).findById(categoryId);
