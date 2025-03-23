@@ -1,0 +1,307 @@
+package com.librarymanagement.project.serviceTest;
+
+
+import com.librarymanagement.project.MzLibrarymanagementApplication;
+import com.librarymanagement.project.models.Category;
+import com.librarymanagement.project.payloads.CategoryDTO;
+import com.librarymanagement.project.payloads.CategoryResponse;
+import com.librarymanagement.project.repositories.CategoryRepository;
+import com.librarymanagement.project.services.CategoryService;
+import org.junit.jupiter.api.Test;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@SpringBootTest
+@ContextConfiguration(classes = MzLibrarymanagementApplication.class)
+public class CategoryServiceTest {
+
+    @MockitoBean
+    private CategoryRepository categoryRepository;
+
+    @MockitoBean
+    private ModelMapper modelMapper;
+
+    @Autowired
+    private CategoryService categoryService;
+
+    @Test
+    public void TestCreateCategorySuccess(){
+        //Set up
+        String name = "Category 1";
+        CategoryDTO categoryDTO = new CategoryDTO(1L,"Category 1");
+        Category category = new Category(1L, "Category 1");
+        Category savedCategory = new Category(1L, "Category 1");
+        CategoryDTO savedCategoryDTO = new CategoryDTO(1L, "Category 1");
+
+        when(modelMapper.map(categoryDTO, Category.class)).thenReturn(category);
+        when(categoryRepository.findByCategoryName(name)).thenReturn(null);
+        when(categoryRepository.save(category)).thenReturn(savedCategory);
+        when(modelMapper.map(savedCategory, CategoryDTO.class)).thenReturn(savedCategoryDTO);
+
+        // Execute
+        CategoryDTO result = categoryService.createCategory(categoryDTO);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(name, result.getCategoryName());
+        assertEquals(1L, result.getCategoryId());
+
+        // Verify
+        verify(categoryRepository, times(1)).findByCategoryName(name);
+        verify(categoryRepository, times(1)).save(category);
+        verify(modelMapper, times(2)).map(any(), any());
+    }
+
+    @Test
+    public void TestCreateCategoryFailNameEmpty(){
+        // Set up
+        String categoryName = "";
+        CategoryDTO categoryDTONew = new CategoryDTO();
+        categoryDTONew.setCategoryName(categoryName);
+
+        // Execute and Assert
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            categoryService.createCategory(categoryDTONew);
+        });
+        assertEquals("Category name must not be empty", exception.getReason());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+
+        // Verify
+        verify(categoryRepository, never()).save(any());  // Ensure save is never called
+    }
+
+    @Test
+    public void TestCreateCategoryFailNameExists(){
+        // Set up
+        Long categoryId = 1L;
+        String categoryName = "category 1";
+        Category categoryExisting = new Category(categoryId, categoryName);
+        Category categoryNew = new Category();
+        categoryNew.setCategoryName(categoryName);
+        CategoryDTO categoryDTONew = new CategoryDTO();
+        categoryDTONew.setCategoryName(categoryName);
+        when(modelMapper.map(categoryDTONew, Category.class)).thenReturn(categoryNew);
+        when(categoryRepository.findByCategoryName(categoryName)).thenReturn(categoryExisting);
+
+        // Execute and Assert
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            categoryService.createCategory(categoryDTONew);
+        });
+        assertEquals("Category name is already in use", exception.getReason());
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+
+        // Verify
+        verify(categoryRepository, times(1)).findByCategoryName(categoryName);
+        verify(categoryRepository, never()).save(any());  // Ensure save is never called
+    }
+
+    @Test
+    public void TestGetAllCategoriesSuccess() {
+        // Setup
+        int pageNumber = 0;
+        int pageSize = 2;
+        String sortBy = "categoryId";
+        String sortOrder = "asc";
+        String name1 = "Category 1";
+        String name2 = "Category 2";
+
+        // Create sample categories
+        Category category1 = new Category(1L, name1);
+        Category category2 = new Category(2L, name2);
+        List<Category> categories = List.of(category1, category2);
+        Page<Category> categoryPage = new PageImpl<>(categories);
+
+        // Mock repository behavior
+        when(categoryRepository.findAll(any(Pageable.class))).thenReturn(categoryPage);
+
+        // Mock ModelMapper behavior
+        CategoryDTO categoryDTO1 = new CategoryDTO(1L, name1);
+        CategoryDTO categoryDTO2 = new CategoryDTO(2L, name2);
+        when(modelMapper.map(category1, CategoryDTO.class)).thenReturn(categoryDTO1);
+        when(modelMapper.map(category2, CategoryDTO.class)).thenReturn(categoryDTO2);
+
+        // Execute
+        CategoryResponse result = categoryService.getAllCategories(pageNumber, pageSize, sortBy, sortOrder);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        assertEquals(name1, result.getContent().get(0).getCategoryName());
+        assertEquals(name2, result.getContent().get(1).getCategoryName());
+        assertEquals(pageNumber, result.getPageNumber());
+        assertEquals(pageSize, result.getPageSize());
+        assertEquals(2, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertTrue(result.isLastPage());
+
+        // Verify repository method was called
+        verify(categoryRepository, times(1)).findAll(any(Pageable.class));
+    }
+
+    @Test
+    void TestGetAllCategoriesFailEmptyCategory() {
+        // Set up
+        int pageNumber = 0;
+        int pageSize = 2;
+        String sortBy = "name";
+        String sortOrder = "asc";
+
+        Page<Category> emptyPage = Page.empty();
+
+        // Mock repository behavior
+        when(categoryRepository.findAll(any(Pageable.class))).thenReturn(emptyPage);
+
+        // Execute & Assert
+        RuntimeException exception = assertThrows(ResponseStatusException.class, () -> {
+            categoryService.getAllCategories(pageNumber, pageSize, sortBy, sortOrder);
+        });
+
+        assertEquals("404 NOT_FOUND \"No categories found\"", exception.getMessage());
+
+        // Verify repository method was called
+        verify(categoryRepository, times(1)).findAll(any(Pageable.class));
+    }
+
+    @Test
+    public void TestDeleteCategorySuccess() {
+        // Set up
+        Long categoryId = 1L;
+        String name = "Category 1";
+        Category category = new Category(categoryId, name);
+        CategoryDTO categoryDTO = new CategoryDTO(categoryId, name);
+
+        // Mock repository behavior
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        doNothing().when(categoryRepository).delete(category);  // Mocking void delete method
+
+        // Mock ModelMapper behavior
+        when(modelMapper.map(category, CategoryDTO.class)).thenReturn(categoryDTO);
+
+        // Execute
+        CategoryDTO result = categoryService.deleteCategory(categoryId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(name, result.getCategoryName());
+
+        // Verify repository methods were called
+        verify(categoryRepository, times(1)).findById(categoryId);
+        verify(categoryRepository, times(1)).delete(category);
+    }
+
+    @Test
+    void TestDeleteCategoryCategoryFailNotFound() {
+        // Arrange
+        Long categoryId = 1L;
+
+        // Mock repository behavior
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
+
+        // Execute & Assert
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            categoryService.deleteCategory(categoryId);
+        });
+
+        assertEquals("404 NOT_FOUND \"No categories found\"", exception.getMessage());
+
+        // Verify repository method was called
+        verify(categoryRepository, times(1)).findById(categoryId);
+        verify(categoryRepository, never()).delete(any());  // Ensure delete is never called
+    }
+
+    @Test
+    void TestUpdateCategorySuccess() {
+        // Set up
+        Long categoryId = 1L;
+        String name = "Category 1";
+        String updatedName = "Category 1 updated";
+        CategoryDTO categoryDTO = new CategoryDTO(categoryId, name);
+        Category savedCategory = new Category(categoryId, name);
+        Category updatedCategory = new Category(categoryId, updatedName);
+        CategoryDTO updatedCategoryDTO = new CategoryDTO(categoryId, updatedName);
+
+        // Mock repository and model mapper behavior
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(savedCategory));
+        when(modelMapper.map(categoryDTO, Category.class)).thenReturn(updatedCategory);
+        when(categoryRepository.save(updatedCategory)).thenReturn(updatedCategory);
+        when(modelMapper.map(updatedCategory, CategoryDTO.class)).thenReturn(updatedCategoryDTO);
+
+        // Execute
+        CategoryDTO result = categoryService.updateCategory(categoryId, categoryDTO);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(updatedName, result.getCategoryName());
+
+        // Verify
+        verify(categoryRepository, times(1)).findById(categoryId);
+        verify(categoryRepository, times(1)).save(updatedCategory);
+        verify(modelMapper, times(2)).map(any(), any());
+    }
+
+    @Test
+    void TestUpdateCategoryFailNameExists() {
+        // Set up
+        Long categoryId = 1L;
+        String name = "Category 1";
+        Category existingCategory = new Category(2L, name);
+        CategoryDTO categoryDTO = new CategoryDTO(categoryId, name);
+        Category savedCategory = new Category(categoryId, name);
+        Category updatedCategory = new Category(categoryId, name);
+        CategoryDTO updatedCategoryDTO = new CategoryDTO(categoryId, name);
+
+        // Mock repository and model mapper behavior
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(savedCategory));
+        when(modelMapper.map(categoryDTO, Category.class)).thenReturn(updatedCategory);
+        when(categoryRepository.save(updatedCategory)).thenReturn(updatedCategory);
+        when(modelMapper.map(updatedCategory, CategoryDTO.class)).thenReturn(updatedCategoryDTO);
+        when(categoryRepository.findByCategoryName(name)).thenReturn(existingCategory);
+
+        // Execute and Assert
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            categoryService.updateCategory(categoryId, categoryDTO);
+        });
+        assertEquals("Category name is already in use", exception.getReason());
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+
+        // Verify
+        verify(categoryRepository, times(1)).findByCategoryName(name);
+        verify(categoryRepository, never()).save(any());
+    }
+
+    @Test
+    void TestUpdateCategoryCategoryNotFound() {
+        // Set up
+        Long categoryId = 1L;
+        CategoryDTO categoryDTO = new CategoryDTO(categoryId, "Updated Category");
+        // Mock repository behavior
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
+
+        // Execute & Assert
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            categoryService.updateCategory(categoryId, categoryDTO);
+        });
+
+        assertEquals("No categories found", exception.getReason());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+
+        // Verify
+        verify(categoryRepository, times(1)).findById(categoryId);
+        verify(categoryRepository, never()).save(any());  // Ensure save is never called
+    }
+
+}
