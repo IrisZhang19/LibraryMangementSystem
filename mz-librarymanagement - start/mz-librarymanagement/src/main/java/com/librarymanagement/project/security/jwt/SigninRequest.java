@@ -1,6 +1,6 @@
 package com.librarymanagement.project.security.jwt;
 
-public class LoginRequest {
+public class SigninRequest {
     private String username;
 
     private String password;

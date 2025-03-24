@@ -1,14 +1,17 @@
 package com.librarymanagement.project.services;
 
-import com.librarymanagement.project.security.jwt.LoginRequest;
+import com.librarymanagement.project.security.jwt.MessageResponse;
+import com.librarymanagement.project.security.jwt.SigninRequest;
 import com.librarymanagement.project.security.jwt.SignupRequest;
+import com.librarymanagement.project.security.jwt.UserInfoResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 
 public interface AuthService {
-    ResponseEntity<?> signin(LoginRequest loginRequest);
 
-    ResponseEntity<?> signupUser(@Valid SignupRequest signUpRequest);
+    UserInfoResponse signin(SigninRequest signinRequest);
 
-    ResponseEntity<?> signupAdmin(@Valid SignupRequest signUpRequest);
+    MessageResponse signupUser(@Valid SignupRequest signUpRequest);
+
+    MessageResponse signupAdmin(@Valid SignupRequest signUpRequest);
 }

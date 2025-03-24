@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Controller to handle book-related operations in the library management system.
@@ -33,7 +34,7 @@ public class BookController {
     @PostMapping("/admin/categories/{categoryId}/book")
     public ResponseEntity<BookDTO> addBook(@RequestBody BookDTO bookDTO, @PathVariable Long categoryId){
         BookDTO addedBook = bookService.addBook(categoryId, bookDTO);
-        return new ResponseEntity<>(addedBook, HttpStatus.OK);
+        return new ResponseEntity<>(addedBook, HttpStatus.CREATED);
     }
 
     /**
@@ -45,7 +46,6 @@ public class BookController {
      * @param sortOrder the sorting order, either ascending ("asc") or descending ("desc") (default: "asc").
      * @return a response containing a list of books and pagination metadata.
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/public/books")
     public ResponseEntity<BookResponse> getAllBooks(
             @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER) Integer pageNumber,
@@ -67,7 +67,6 @@ public class BookController {
      * @param sortOrder the sorting order, either ascending ("asc") or descending ("desc") (default: "asc").
      * @return a response containing a list of books filtered by category and pagination metadata.
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/public/categories/{categoryId}/books")
     public ResponseEntity<BookResponse> getBooksByCategory(
             @PathVariable Long categoryId,
@@ -151,4 +150,5 @@ public class BookController {
         BookDTO updatedBookDTO = bookService.updateBook(bookId, bookDTO);
         return new ResponseEntity<>(updatedBookDTO, HttpStatus.OK);
     }
+
 }

@@ -79,10 +79,11 @@ public class BookServiceImpl implements  BookService{
         Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAnyOrder);
         Page<Book> pageBooks = bookRepository.findAll(pageDetails);
         List<Book> books = pageBooks.getContent();
-
-        if(books.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found");
-        }
+        System.out.println("Books retrieved: " + books);
+//        if(books.isEmpty()){
+//            System.out.println("No books found. Throwing ResponseStatusException.");
+//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found");
+//        }
         // Map to BookDTOs
         List<BookDTO> bookDTOS = books.stream()
                 .map(book -> modelMapper.map(book, BookDTO.class))
