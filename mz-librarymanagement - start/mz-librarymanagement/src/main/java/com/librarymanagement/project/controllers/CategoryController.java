@@ -8,6 +8,7 @@ import com.librarymanagement.project.services.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -47,6 +48,7 @@ public class CategoryController {
      * @param categoryDTO the category data to be added
      * @return a ResponseEntity containing the created CategoryDTO
      */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/categories")
     public ResponseEntity<CategoryDTO> addCategory(@RequestBody CategoryDTO categoryDTO){
         CategoryDTO returnedCate =   categoryService.createCategory(categoryDTO);
@@ -59,6 +61,7 @@ public class CategoryController {
      * @param categoryId the ID of the category to delete
      * @return a ResponseEntity containing the deleted CategoryDTO
      */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/admin/categories/{categoryId}")
     public ResponseEntity<CategoryDTO> deleteCategory(@PathVariable Long categoryId){
         CategoryDTO categoryDTO = categoryService.deleteCategory(categoryId);
@@ -72,6 +75,7 @@ public class CategoryController {
      * @param categoryDTO the updated category data
      * @return a ResponseEntity containing the updated CategoryDTO
      */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/admin/categories/{categoryId}")
     public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long categoryId, @RequestBody CategoryDTO categoryDTO){
         CategoryDTO savedCategory = categoryService.updateCategory(categoryId, categoryDTO);
