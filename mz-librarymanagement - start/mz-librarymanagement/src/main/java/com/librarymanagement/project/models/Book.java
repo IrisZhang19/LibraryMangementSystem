@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 
 /**
@@ -69,6 +70,7 @@ public class Book {
      * A book can belong to only one category, but each category can contain multiple books.
      */
     @ManyToOne
+    @NonNull
     @JoinColumn(name = "category_id")
     private Category category;
 
