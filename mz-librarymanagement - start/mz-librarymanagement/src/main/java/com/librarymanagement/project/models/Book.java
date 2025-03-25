@@ -102,4 +102,13 @@ public class Book {
         this.category = category;
     }
 
+
+    public boolean isAvailable(){
+        return this.copiesAvailable > 0;
+    }
+
+    public void borrowOneCopy(){
+        this.copiesAvailable = this.copiesAvailable - 1;
+    }
+
 }
