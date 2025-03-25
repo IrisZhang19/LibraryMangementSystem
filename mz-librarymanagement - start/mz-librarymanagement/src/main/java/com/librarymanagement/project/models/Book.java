@@ -108,7 +108,14 @@ public class Book {
     }
 
     public void borrowOneCopy(){
-        this.copiesAvailable = this.copiesAvailable - 1;
+        if(this.copiesAvailable > 0){
+            this.copiesAvailable = this.copiesAvailable - 1;
+        }
     }
 
+    public void returnOneCopy() {
+        if(this.copiesAvailable < this.copiesTotal) {
+            this.copiesAvailable = this.copiesAvailable + 1;
+        }
+    }
 }

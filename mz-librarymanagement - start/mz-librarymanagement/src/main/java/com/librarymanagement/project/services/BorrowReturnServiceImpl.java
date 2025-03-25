@@ -68,4 +68,34 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
 
         return modelMapper.map(savedTransaction, TranscationDTO.class);
     }
+
+    @Override
+    public TranscationDTO returnBook(Long bookId) {
+        // Fetch the user
+        Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userRepository.findByUserName(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+        Long userId = user.getUserId();
+
+        // Check the book
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+
+        // Check if it's unreturned by the user
+        Optional<Transaction> existingTransaction = transactionRepository.findByUser_UserIdAndBook_BookIdAndIsReturnedFalse(userId, bookId);
+        if(!existingTransaction.isPresent()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book is not in borrow with the user");
+        }
+
+        // Update the transaction by returning the book
+        Transaction transaction = existingTransaction.get();
+        transaction.setReturned(true);
+        transaction.setReturnedDate(LocalDate.now());
+        transactionRepository.save(transaction);
+        book.returnOneCopy();
+        bookRepository.save(book);
+
+        return modelMapper.map(transaction, TranscationDTO.class);
+    }
 }
