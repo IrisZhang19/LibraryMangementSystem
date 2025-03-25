@@ -4,7 +4,7 @@ package com.librarymanagement.project.ControllerTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.librarymanagement.project.MzLibrarymanagementApplication;
 import com.librarymanagement.project.payloads.BookDTO;
-import com.librarymanagement.project.payloads.TranscationDTO;
+import com.librarymanagement.project.payloads.TransactionDTO;
 import com.librarymanagement.project.payloads.UserDTO;
 import com.librarymanagement.project.services.BorrowReturnService;
 import org.junit.jupiter.api.Test;
@@ -49,7 +49,7 @@ public class BorrowReturnControllerTest {
         LocalDate borrowTime = LocalDate.now();
         BookDTO bookDTO = new BookDTO();
         bookDTO.setBookId(bookId);
-        TranscationDTO transcationDTO = new TranscationDTO();
+        TransactionDTO transcationDTO = new TransactionDTO();
         transcationDTO.setBook(bookDTO);
         transcationDTO.setBorrowedDate(borrowTime);
         transcationDTO.setReturned(false);
@@ -132,7 +132,7 @@ public class BorrowReturnControllerTest {
         LocalDate returnTime = LocalDate.now();
         BookDTO bookDTO = new BookDTO();
         bookDTO.setBookId(bookId);
-        TranscationDTO transcationDTO = new TranscationDTO();
+        TransactionDTO transcationDTO = new TransactionDTO();
         transcationDTO.setBook(bookDTO);
         transcationDTO.setBorrowedDate(borrowTime);
         transcationDTO.setReturnedDate(returnTime);

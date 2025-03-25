@@ -1,7 +1,7 @@
 package com.librarymanagement.project.controllers;
 
 
-import com.librarymanagement.project.payloads.TranscationDTO;
+import com.librarymanagement.project.payloads.TransactionDTO;
 import com.librarymanagement.project.services.BorrowReturnService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,15 +21,15 @@ public class BorrowReturnController {
 
     @PreAuthorize("hasRole('ROLE_USER')")
     @PostMapping("/borrow/{bookId}")
-    public ResponseEntity<TranscationDTO> borrowBook(@PathVariable Long bookId){
-        TranscationDTO transcationDTO = borrowReturnService.borrowBook(bookId);
+    public ResponseEntity<TransactionDTO> borrowBook(@PathVariable Long bookId){
+        TransactionDTO transcationDTO = borrowReturnService.borrowBook(bookId);
         return new ResponseEntity<>(transcationDTO, HttpStatus.OK);
     }
 
-    @PreAuthorize("haRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @PostMapping("/return/{bookId}")
-    public ResponseEntity<TranscationDTO> returnBook(@PathVariable Long bookId){
-        TranscationDTO transcationDTO = borrowReturnService.returnBook(bookId);
+    public ResponseEntity<TransactionDTO> returnBook(@PathVariable Long bookId){
+        TransactionDTO transcationDTO = borrowReturnService.returnBook(bookId);
         return new ResponseEntity<>(transcationDTO, HttpStatus.OK);
     }
 }

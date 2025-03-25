@@ -3,7 +3,7 @@ package com.librarymanagement.project.services;
 import com.librarymanagement.project.models.Book;
 import com.librarymanagement.project.models.Transaction;
 import com.librarymanagement.project.models.User;
-import com.librarymanagement.project.payloads.TranscationDTO;
+import com.librarymanagement.project.payloads.TransactionDTO;
 import com.librarymanagement.project.repositories.BookRepository;
 import com.librarymanagement.project.repositories.TransactionRepository;
 import com.librarymanagement.project.repositories.UserRepository;
@@ -32,8 +32,9 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
 
     @Autowired
     private ModelMapper modelMapper;
+
     @Override
-    public TranscationDTO borrowBook(Long bookId) {
+    public TransactionDTO borrowBook(Long bookId) {
         // Fetch the user
         Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
@@ -66,11 +67,11 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
         book.borrowOneCopy();
         bookRepository.save(book);
 
-        return modelMapper.map(savedTransaction, TranscationDTO.class);
+        return modelMapper.map(savedTransaction, TransactionDTO.class);
     }
 
     @Override
-    public TranscationDTO returnBook(Long bookId) {
+    public TransactionDTO returnBook(Long bookId) {
         // Fetch the user
         Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
@@ -85,7 +86,8 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
         // Check if the user has a borrow record with this book
         Optional<Transaction> existingTransaction = transactionRepository.findByUser_UserIdAndBook_BookIdAndIsReturnedFalse(userId, bookId);
         if(!existingTransaction.isPresent()){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Book is not in borrow with the user");
+//            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Book is not in borrow with the user");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book is not in borrow with the user");
         }
 
         // Update the transaction by returning the book
@@ -96,6 +98,6 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
         book.returnOneCopy();
         bookRepository.save(book);
 
-        return modelMapper.map(transaction, TranscationDTO.class);
+        return modelMapper.map(transaction, TransactionDTO.class);
     }
 }
