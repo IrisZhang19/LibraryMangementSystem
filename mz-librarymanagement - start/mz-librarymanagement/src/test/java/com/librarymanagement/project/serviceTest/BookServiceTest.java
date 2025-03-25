@@ -5,6 +5,7 @@ import com.librarymanagement.project.MzLibrarymanagementApplication;
 import com.librarymanagement.project.models.Book;
 import com.librarymanagement.project.models.Category;
 import com.librarymanagement.project.payloads.BookDTO;
+import com.librarymanagement.project.payloads.CategoryDTO;
 import com.librarymanagement.project.repositories.BookRepository;
 import com.librarymanagement.project.repositories.CategoryRepository;
 import com.librarymanagement.project.services.BookService;
@@ -33,10 +34,6 @@ public class BookServiceTest {
     @MockitoBean
     private CategoryRepository categoryRepository;
 
-    @MockitoBean
-    private ModelMapper modelMapper;
-
-
     @Autowired
     private BookService bookService;
 
@@ -54,19 +51,30 @@ public class BookServiceTest {
         Long categoryId = 1L;
         String  categoryName = "category 1";
         Category category = new Category(categoryId, categoryName);
+        CategoryDTO categoryDTO = new CategoryDTO(categoryId, categoryName);
 
         Long bookId = 1L;
         String title = "Book 1";
         String author = "Author 1";
-        BookDTO bookDTO = new BookDTO(title, author);
-        Book book = new Book(bookId, title, author);
-        Book savedBook = new Book(bookId, title, author, category);
-        BookDTO savedBookDTO = new BookDTO(bookId, title, author, category);
+
+        BookDTO bookDTO = new BookDTO();
+        bookDTO.setTitle(title);
+        bookDTO.setAuthor(author);
+        bookDTO.setCategory(category);
+
+        Book book = new Book();
+        book.setTitle(title);
+        book.setAuthor(author);
+        book.setCategory(category);
+
+        Book savedBook = new Book();
+        savedBook.setBookId(bookId);
+        savedBook.setTitle(title);
+        savedBook.setAuthor(author);
+        savedBook.setCategory(category);
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
-        when(modelMapper.map(bookDTO, Book.class)).thenReturn(book);
         when(bookRepository.save(book)).thenReturn(savedBook);
-        when(modelMapper.map(savedBook, BookDTO.class)).thenReturn(savedBookDTO);
 
         // execute
         BookDTO result = bookService.addBook(categoryId, bookDTO);
@@ -81,7 +89,6 @@ public class BookServiceTest {
         //verify
         verify(categoryRepository, times(1)).findById(categoryId);
         verify(bookRepository, times(1)).save(book);
-        verify(modelMapper, times(2)).map(any(), any());
     }
 
     @Test
@@ -90,7 +97,9 @@ public class BookServiceTest {
         Long categoryId = 1L;
         String title = "Book 1";
         String author = "Author 1";
-        BookDTO bookDTO = new BookDTO(title, author);
+        BookDTO bookDTO = new BookDTO();
+        bookDTO.setTitle(title);
+        bookDTO.setAuthor(author);
 
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());

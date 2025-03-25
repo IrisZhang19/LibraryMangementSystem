@@ -32,9 +32,6 @@ public class CategoryServiceTest {
     @MockitoBean
     private CategoryRepository categoryRepository;
 
-    @MockitoBean
-    private ModelMapper modelMapper;
-
     @Autowired
     private CategoryService categoryService;
 
@@ -45,12 +42,9 @@ public class CategoryServiceTest {
         CategoryDTO categoryDTO = new CategoryDTO(1L,"Category 1");
         Category category = new Category(1L, "Category 1");
         Category savedCategory = new Category(1L, "Category 1");
-        CategoryDTO savedCategoryDTO = new CategoryDTO(1L, "Category 1");
 
-        when(modelMapper.map(categoryDTO, Category.class)).thenReturn(category);
         when(categoryRepository.findByCategoryName(name)).thenReturn(null);
         when(categoryRepository.save(category)).thenReturn(savedCategory);
-        when(modelMapper.map(savedCategory, CategoryDTO.class)).thenReturn(savedCategoryDTO);
 
         // Execute
         CategoryDTO result = categoryService.createCategory(categoryDTO);
@@ -63,7 +57,6 @@ public class CategoryServiceTest {
         // Verify
         verify(categoryRepository, times(1)).findByCategoryName(name);
         verify(categoryRepository, times(1)).save(category);
-        verify(modelMapper, times(2)).map(any(), any());
     }
 
     @Test
@@ -94,7 +87,6 @@ public class CategoryServiceTest {
         categoryNew.setCategoryName(categoryName);
         CategoryDTO categoryDTONew = new CategoryDTO();
         categoryDTONew.setCategoryName(categoryName);
-        when(modelMapper.map(categoryDTONew, Category.class)).thenReturn(categoryNew);
         when(categoryRepository.findByCategoryName(categoryName)).thenReturn(categoryExisting);
 
         // Execute and Assert
@@ -127,12 +119,6 @@ public class CategoryServiceTest {
 
         // Mock repository behavior
         when(categoryRepository.findAll(any(Pageable.class))).thenReturn(categoryPage);
-
-        // Mock ModelMapper behavior
-        CategoryDTO categoryDTO1 = new CategoryDTO(1L, name1);
-        CategoryDTO categoryDTO2 = new CategoryDTO(2L, name2);
-        when(modelMapper.map(category1, CategoryDTO.class)).thenReturn(categoryDTO1);
-        when(modelMapper.map(category2, CategoryDTO.class)).thenReturn(categoryDTO2);
 
         // Execute
         CategoryResponse result = categoryService.getAllCategories(pageNumber, pageSize, sortBy, sortOrder);
@@ -188,9 +174,6 @@ public class CategoryServiceTest {
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
         doNothing().when(categoryRepository).delete(category);  // Mocking void delete method
 
-        // Mock ModelMapper behavior
-        when(modelMapper.map(category, CategoryDTO.class)).thenReturn(categoryDTO);
-
         // Execute
         CategoryDTO result = categoryService.deleteCategory(categoryId);
 
@@ -229,16 +212,14 @@ public class CategoryServiceTest {
         Long categoryId = 1L;
         String name = "Category 1";
         String updatedName = "Category 1 updated";
-        CategoryDTO categoryDTO = new CategoryDTO(categoryId, name);
+        CategoryDTO categoryDTO = new CategoryDTO();
+        categoryDTO.setCategoryName(updatedName);
         Category savedCategory = new Category(categoryId, name);
         Category updatedCategory = new Category(categoryId, updatedName);
-        CategoryDTO updatedCategoryDTO = new CategoryDTO(categoryId, updatedName);
 
         // Mock repository and model mapper behavior
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(savedCategory));
-        when(modelMapper.map(categoryDTO, Category.class)).thenReturn(updatedCategory);
         when(categoryRepository.save(updatedCategory)).thenReturn(updatedCategory);
-        when(modelMapper.map(updatedCategory, CategoryDTO.class)).thenReturn(updatedCategoryDTO);
 
         // Execute
         CategoryDTO result = categoryService.updateCategory(categoryId, categoryDTO);
@@ -250,7 +231,7 @@ public class CategoryServiceTest {
         // Verify
         verify(categoryRepository, times(1)).findById(categoryId);
         verify(categoryRepository, times(1)).save(updatedCategory);
-        verify(modelMapper, times(2)).map(any(), any());
+//        verify(modelMapper, times(2)).map(any(), any());
     }
 
     @Test
@@ -262,13 +243,10 @@ public class CategoryServiceTest {
         CategoryDTO categoryDTO = new CategoryDTO(categoryId, name);
         Category savedCategory = new Category(categoryId, name);
         Category updatedCategory = new Category(categoryId, name);
-        CategoryDTO updatedCategoryDTO = new CategoryDTO(categoryId, name);
 
         // Mock repository and model mapper behavior
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(savedCategory));
-        when(modelMapper.map(categoryDTO, Category.class)).thenReturn(updatedCategory);
         when(categoryRepository.save(updatedCategory)).thenReturn(updatedCategory);
-        when(modelMapper.map(updatedCategory, CategoryDTO.class)).thenReturn(updatedCategoryDTO);
         when(categoryRepository.findByCategoryName(name)).thenReturn(existingCategory);
 
         // Execute and Assert
