@@ -38,14 +38,14 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
         Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         User user = userRepository.findByUserName(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No users found"));
         Long userId = user.getUserId();
 
         // Find the book and check availability
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
         if(!book.isAvailable()){
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "No copies available");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No copies available");
         }
 
         // Check if user has unreturned borrow of the same book
@@ -82,10 +82,10 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
 
-        // Check if it's unreturned by the user
+        // Check if the user has a borrow record with this book
         Optional<Transaction> existingTransaction = transactionRepository.findByUser_UserIdAndBook_BookIdAndIsReturnedFalse(userId, bookId);
         if(!existingTransaction.isPresent()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book is not in borrow with the user");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Book is not in borrow with the user");
         }
 
         // Update the transaction by returning the book

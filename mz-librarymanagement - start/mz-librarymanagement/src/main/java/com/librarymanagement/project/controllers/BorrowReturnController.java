@@ -19,14 +19,14 @@ public class BorrowReturnController {
     @Autowired
     private BorrowReturnService borrowReturnService;
 
-    @PreAuthorize("hasRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @PostMapping("/borrow/{bookId}")
     public ResponseEntity<TranscationDTO> borrowBook(@PathVariable Long bookId){
         TranscationDTO transcationDTO = borrowReturnService.borrowBook(bookId);
         return new ResponseEntity<>(transcationDTO, HttpStatus.OK);
     }
 
-    @PreAuthorize("haRole('ROLE_USER','ROLE_ADMIN')")
+    @PreAuthorize("haRole('ROLE_USER')")
     @PostMapping("/return/{bookId}")
     public ResponseEntity<TranscationDTO> returnBook(@PathVariable Long bookId){
         TranscationDTO transcationDTO = borrowReturnService.returnBook(bookId);
