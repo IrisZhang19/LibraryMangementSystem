@@ -3,8 +3,6 @@ package com.librarymanagement.project.ControllerTest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.librarymanagement.project.MzLibrarymanagementApplication;
-import com.librarymanagement.project.models.AppRole;
-import com.librarymanagement.project.models.Role;
 import com.librarymanagement.project.security.jwt.MessageResponse;
 import com.librarymanagement.project.security.jwt.SigninRequest;
 import com.librarymanagement.project.security.jwt.SignupRequest;
@@ -25,9 +23,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.ArgumentMatchers.any;

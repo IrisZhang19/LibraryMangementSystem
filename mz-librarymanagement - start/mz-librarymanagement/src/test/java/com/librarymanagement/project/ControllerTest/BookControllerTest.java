@@ -136,6 +136,7 @@ public class BookControllerTest {
         bookResponse.setLastPage(true);
         when(bookService.getAllBooks(0, 1, "title", "asc"))
                 .thenReturn(bookResponse);
+
         mockMvc.perform(MockMvcRequestBuilders.get("/api/public/books")
                 .param("pageNumber", "0")
                 .param("pageSize", "1")

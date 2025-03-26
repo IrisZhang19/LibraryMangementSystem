@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -41,9 +42,10 @@ public class BookServiceImpl implements  BookService{
      * @param bookDTO The {@link BookDTO} containing the book details.
      * @return The added {@link BookDTO}.
      */
+    @Transactional
     @Override
     public BookDTO addBook(Long categoryId, BookDTO bookDTO) {
-        // Check if the new name is valid
+        // Check if the new title is valid
         if (bookDTO.getTitle() == null || bookDTO.getTitle().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book title must not be empty");
         }
@@ -51,6 +53,7 @@ public class BookServiceImpl implements  BookService{
         // Check if the category exists
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found"));
+
         Book book = modelMapper.map(bookDTO, Book.class);
         book.setCategory(category);
         Book savedBook = bookRepository.save(book);
@@ -79,11 +82,7 @@ public class BookServiceImpl implements  BookService{
         Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAnyOrder);
         Page<Book> pageBooks = bookRepository.findAll(pageDetails);
         List<Book> books = pageBooks.getContent();
-        System.out.println("Books retrieved: " + books);
-//        if(books.isEmpty()){
-//            System.out.println("No books found. Throwing ResponseStatusException.");
-//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found");
-//        }
+
         // Map to BookDTOs
         List<BookDTO> bookDTOS = books.stream()
                 .map(book -> modelMapper.map(book, BookDTO.class))

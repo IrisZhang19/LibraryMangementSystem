@@ -18,6 +18,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
@@ -40,6 +41,7 @@ public class AuthServiceImpl implements  AuthService{
 
     @Autowired
     private PasswordEncoder encoder;
+
     @Override
     public UserInfoResponse signin(SigninRequest loginRequest) {
         Authentication authentication;
@@ -65,8 +67,10 @@ public class AuthServiceImpl implements  AuthService{
         return response;
     }
 
+    @Transactional
     @Override
     public MessageResponse signupUser(SignupRequest signUpRequest) {
+
         // check if username and email are already exists
         if (userRepository.existsByUserName(signUpRequest.getUsername())) {
             return new MessageResponse("Error: Username is already taken!");
@@ -81,20 +85,18 @@ public class AuthServiceImpl implements  AuthService{
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword())); // make sure password is encoded
 
-//        Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();
 
-//        if (strRoles == null) {
             Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role User not found"));
             roles.add(userRole);
-//        }
 
         user.setRoles(roles);
         userRepository.save(user);
         return new MessageResponse("User registered successfully!");
     }
 
+    @Transactional
     @Override
     public MessageResponse signupAdmin(SignupRequest signUpRequest) {
         // Check if username and email are unique

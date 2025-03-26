@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -33,6 +34,7 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
     @Autowired
     private ModelMapper modelMapper;
 
+    @Transactional
     @Override
     public TransactionDTO borrowBook(Long bookId) {
         // Fetch the user
@@ -70,6 +72,7 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
         return modelMapper.map(savedTransaction, TransactionDTO.class);
     }
 
+    @Transactional
     @Override
     public TransactionDTO returnBook(Long bookId) {
         // Fetch the user
@@ -86,7 +89,6 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
         // Check if the user has a borrow record with this book
         Optional<Transaction> existingTransaction = transactionRepository.findByUser_UserIdAndBook_BookIdAndIsReturnedFalse(userId, bookId);
         if(!existingTransaction.isPresent()){
-//            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Book is not in borrow with the user");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book is not in borrow with the user");
         }
 
