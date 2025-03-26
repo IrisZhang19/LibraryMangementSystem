@@ -9,7 +9,6 @@ import com.librarymanagement.project.payloads.BookResponse;
  */
 public interface BookService {
 
-
     /**
      * Adds a new book to the system.
      *

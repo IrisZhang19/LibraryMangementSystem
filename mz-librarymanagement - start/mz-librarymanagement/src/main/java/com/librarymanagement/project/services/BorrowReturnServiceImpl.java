@@ -19,6 +19,11 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.Optional;
 
+
+/**
+ * Implementation of {@link BorrowReturnService} for managing category-related operations.
+ * Provides methods for borrow and return books.
+ */
 @Service
 public class BorrowReturnServiceImpl implements BorrowReturnService{
 
@@ -34,6 +39,14 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
     @Autowired
     private ModelMapper modelMapper;
 
+
+    /**
+     * Borrows a book for the current user.
+     *
+     * @param bookId the ID of the book to be borrowed.
+     * @return a TransactionDTO containing the transaction details for the borrowing.
+     * @throws ResponseStatusException if the book is unavailable or if the user already has the book borrowed.
+     */
     @Transactional
     @Override
     public TransactionDTO borrowBook(Long bookId) {
@@ -72,6 +85,14 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
         return modelMapper.map(savedTransaction, TransactionDTO.class);
     }
 
+
+    /**
+     * Returns a book for the current user.
+     *
+     * @param bookId the ID of the book to be returned.
+     * @return a TransactionDTO containing the transaction details for the borrowing.
+     * @throws ResponseStatusException if the book is not borrowed by the current user.
+     */
     @Transactional
     @Override
     public TransactionDTO returnBook(Long bookId) {

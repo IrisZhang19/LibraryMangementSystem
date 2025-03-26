@@ -46,4 +46,5 @@ public class CategoryResponse {
      * Indicates whether this is the last page in the pagination.
      */
     private boolean lastPage;
+
 }

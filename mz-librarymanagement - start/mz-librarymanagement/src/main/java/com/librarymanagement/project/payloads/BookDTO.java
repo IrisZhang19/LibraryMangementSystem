@@ -48,18 +48,4 @@ public class BookDTO {
      */
     private Category category;
 
-//    // for unit testing
-//    public BookDTO(String title, String author){
-//        this.title = title;
-//        this.author = author;
-//    }
-//
-//    public BookDTO(Long id, String title, String author, Category category){
-//        this.bookId = id;
-//        this.title = title;
-//        this.author = author;
-//        this.category = category;
-//    }
-
-
 }
