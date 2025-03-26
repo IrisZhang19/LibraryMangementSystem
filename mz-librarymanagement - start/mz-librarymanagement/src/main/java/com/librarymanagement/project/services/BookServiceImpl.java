@@ -123,14 +123,14 @@ public class BookServiceImpl implements  BookService{
      */
     @Override
     public BookDTO updateBook(Long bookId, BookDTO bookDTO) {
+        // Find the book
+        Book bookFromDB = bookRepository.findById(bookId)
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+
         // Check if the new name is valid
         if (bookDTO.getTitle() == null || bookDTO.getTitle().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book title must not be empty");
         }
-
-        // Find the book
-        Book bookFromDB = bookRepository.findById(bookId)
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
 
         // Update the properties
         Book book = modelMapper.map(bookDTO, Book.class);

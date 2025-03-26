@@ -46,7 +46,6 @@ public class BookControllerTest {
     @MockitoBean
     private BookService bookService;
 
-
     @Test
     @WithMockUser(username = "user", roles = "ADMIN")
     public void TestCreateBookSuccess() throws Exception {
