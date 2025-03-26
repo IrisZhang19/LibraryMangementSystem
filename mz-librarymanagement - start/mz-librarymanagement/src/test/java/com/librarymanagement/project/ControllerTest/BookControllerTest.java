@@ -152,7 +152,7 @@ public class BookControllerTest {
 
 
     @Test
-    public  void TestGetAllBooksFailEmpty() throws Exception {
+    public  void TestGetAllBooksSuccessEmpty() throws Exception {
         BookResponse bookResponse = new BookResponse(new ArrayList<>(), 0, 10, 0L,0, true);
         when(bookService.getAllBooks(anyInt(), anyInt(), anyString(), anyString()))
                 .thenReturn(bookResponse);
@@ -189,8 +189,6 @@ public class BookControllerTest {
     @WithMockUser(username = "user", roles = "USER")
     public void TestUpdateBookFailNotAdmin() throws Exception{
         BookDTO bookDTO = new BookDTO();
-        when(bookService.updateBook(anyLong(), any(BookDTO.class)))
-                .thenReturn(bookDTO);
         mockMvc.perform(MockMvcRequestBuilders.put("/api/admin/books/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(bookDTO)))

@@ -5,6 +5,7 @@ import com.librarymanagement.project.configs.AppConstants;
 import com.librarymanagement.project.payloads.CategoryDTO;
 import com.librarymanagement.project.payloads.CategoryResponse;
 import com.librarymanagement.project.services.CategoryService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,9 +51,9 @@ public class CategoryController {
      */
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/categories")
-    public ResponseEntity<CategoryDTO> addCategory(@RequestBody CategoryDTO categoryDTO){
+    public ResponseEntity<CategoryDTO> addCategory(@Valid  @RequestBody CategoryDTO categoryDTO){
         CategoryDTO returnedCate =   categoryService.createCategory(categoryDTO);
-        return new ResponseEntity<>(returnedCate, HttpStatus.OK);
+        return new ResponseEntity<>(returnedCate, HttpStatus.CREATED);
     }
 
     /**

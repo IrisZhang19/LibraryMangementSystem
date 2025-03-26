@@ -52,10 +52,6 @@ public class CategoryServiceImpl implements CategoryService{
         Page<Category> categoryPage = categoryRepository.findAll(pageDetails);
         List<Category> categories =categoryPage.getContent();
 
-        if(categories.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found");
-        }
-
         // Map to CategoryDTOs
         List<CategoryDTO> categoryDTOS = categories.stream()
                 .map(category -> modelMapper.map(category, CategoryDTO.class))

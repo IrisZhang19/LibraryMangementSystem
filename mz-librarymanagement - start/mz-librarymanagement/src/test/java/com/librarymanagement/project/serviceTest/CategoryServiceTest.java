@@ -138,7 +138,7 @@ public class CategoryServiceTest {
     }
 
     @Test
-    void TestGetAllCategoriesFailEmptyCategory() {
+    void TestGetAllCategoriesSuccessEmptyCategory() {
         // Set up
         int pageNumber = 0;
         int pageSize = 2;
@@ -151,11 +151,11 @@ public class CategoryServiceTest {
         when(categoryRepository.findAll(any(Pageable.class))).thenReturn(emptyPage);
 
         // Execute & Assert
-        RuntimeException exception = assertThrows(ResponseStatusException.class, () -> {
-            categoryService.getAllCategories(pageNumber, pageSize, sortBy, sortOrder);
-        });
+        CategoryResponse categoryResponse = categoryService.getAllCategories(pageNumber, pageSize, sortBy, sortOrder);
 
-        assertEquals("404 NOT_FOUND \"No categories found\"", exception.getMessage());
+        assertNotNull(categoryResponse);
+        assertEquals(0, categoryResponse.getContent().size());
+
 
         // Verify repository method was called
         verify(categoryRepository, times(1)).findAll(any(Pageable.class));
