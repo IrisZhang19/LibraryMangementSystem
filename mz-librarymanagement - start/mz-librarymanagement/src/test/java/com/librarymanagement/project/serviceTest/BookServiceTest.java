@@ -121,6 +121,31 @@ public class BookServiceTest {
     }
 
     @Test
+    public void TestCreateBookFailTitleEmpty(){
+        //Set up
+        Long categoryId = 1L;
+        String  categoryName = "category 1";
+        Category category = new Category(categoryId, categoryName);
+
+        String author = "Author 1";
+        BookDTO bookDTO = new BookDTO();
+        bookDTO.setAuthor(author);
+        bookDTO.setCategory(category);
+        bookDTO.setTitle("");
+
+        // execute
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+                bookService.addBook(categoryId, bookDTO) );
+
+        // assert
+        assertEquals("Book title must not be empty", exception.getReason());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+
+        //Verify book never saved to repository
+        verify(bookRepository, never()).save(any(Book.class));
+    }
+
+    @Test
     public void TestCreateBookFailCategoryNotFound(){
         // Set up
         Long categoryId = 1L;

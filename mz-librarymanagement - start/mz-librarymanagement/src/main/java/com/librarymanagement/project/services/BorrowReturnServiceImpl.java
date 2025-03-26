@@ -100,7 +100,7 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
         Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         User user = userRepository.findByUserName(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No users found"));
         Long userId = user.getUserId();
 
         // Check the book
