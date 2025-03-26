@@ -2,6 +2,7 @@ package com.librarymanagement.project.services;
 
 
 import com.librarymanagement.project.models.AppRole;
+import com.librarymanagement.project.models.Book;
 import com.librarymanagement.project.models.Role;
 import com.librarymanagement.project.models.User;
 import com.librarymanagement.project.repositories.RoleRepository;
@@ -24,6 +25,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Service implementation for handling authentication and user signup.
+ */
 @Service
 public class AuthServiceImpl implements  AuthService{
 
@@ -42,6 +46,13 @@ public class AuthServiceImpl implements  AuthService{
     @Autowired
     private PasswordEncoder encoder;
 
+    /**
+     * Authenticates a user and generates a JWT token.
+     *
+     * @param loginRequest the login request containing the username and password of the user.
+     * @return UserInfoResponse containing user details and JWT token.
+     * @throws BadCredentialsException if authentication fails due to incorrect username or password.
+     */
     @Override
     public UserInfoResponse signin(SigninRequest loginRequest) {
         Authentication authentication;
@@ -67,10 +78,15 @@ public class AuthServiceImpl implements  AuthService{
         return response;
     }
 
+    /**
+     * Signs up a new regular user.
+     *
+     * @param signUpRequest contains the details of the user (username, email, password) for signup.
+     * @return MessageResponse containing a success or error message.
+     */
     @Transactional
     @Override
     public MessageResponse signupUser(SignupRequest signUpRequest) {
-
         // check if username and email are already exists
         if (userRepository.existsByUserName(signUpRequest.getUsername())) {
             return new MessageResponse("Error: Username is already taken!");
@@ -96,6 +112,12 @@ public class AuthServiceImpl implements  AuthService{
         return new MessageResponse("User registered successfully!");
     }
 
+    /**
+     * Signs up a new admin user.
+     *
+     * @param signUpRequest contains the details of the admin user (username, email, password) for signup.
+     * @return MessageResponse containing a success or error message.
+     */
     @Transactional
     @Override
     public MessageResponse signupAdmin(SignupRequest signUpRequest) {
