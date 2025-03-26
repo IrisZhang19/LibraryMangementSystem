@@ -29,7 +29,6 @@ import java.util.Set;
 
 @Configuration
 @EnableWebSecurity
-//@EnableMethodSecurity
 public class WebSecurityConfig {
     @Autowired
     UserDetailsServiceImpl userDetailsService;
@@ -84,19 +83,14 @@ public class WebSecurityConfig {
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/api/borrow/**").hasRole("USER")
                                 .requestMatchers("/api/return/**").hasRole("USER")
-//                                .requestMatchers("/api/auth/signup").permitAll()
                                 .anyRequest().authenticated()
                 );
-//        http.csrf(AbstractHttpConfigurer::disable);
 
         http.authenticationProvider(authenticationProvider());
 
         http.addFilterBefore(authenticationJwtTokenFilter(),
                 UsernamePasswordAuthenticationFilter.class);
-//        http.headers(headers ->
-//                headers.frameOptions(
-//                        frameOptionsConfig -> frameOptionsConfig.sameOrigin()
-//                ));
+
         return http.build();
     }
 
@@ -109,50 +103,4 @@ public class WebSecurityConfig {
                 "/swagger-ui.html",
                 "/webjars/**"));
     }
-
-    //initialize some roles and users
-
-//    @Bean
-//    public CommandLineRunner initData(RoleRepository roleRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
-//        return args -> {
-//            // Retrieve or create roles
-//            Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
-//                    .orElseGet(() -> {
-//                        Role newUserRole = new Role(AppRole.ROLE_USER);
-//                        return roleRepository.save(newUserRole);
-//                    });
-//            Role adminRole = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
-//                    .orElseGet(() -> {
-//                        Role newAdminRole = new Role(AppRole.ROLE_ADMIN);
-//                        return roleRepository.save(newAdminRole);
-//                    });
-//
-//            Set<Role> userRoles = Set.of(userRole);
-//            Set<Role> adminRoles = Set.of(userRole, adminRole);
-//
-//
-//            // Create users if not already present
-//            if (!userRepository.existsByUserName("user1")) {
-//                User user1 = new User("user1", "user1@example.com", passwordEncoder.encode("password1"));
-//                userRepository.save(user1);
-//            }
-//
-//            if (!userRepository.existsByUserName("admin")) {
-//                User admin = new User("admin", "admin@example.com", passwordEncoder.encode("adminPass"));
-//                userRepository.save(admin);
-//            }
-//
-//            // Update roles for existing users
-//            userRepository.findByUserName("user1").ifPresent(user -> {
-//                user.setRoles(userRoles);
-//                userRepository.save(user);
-//            });
-//
-//            userRepository.findByUserName("admin").ifPresent(admin -> {
-//                admin.setRoles(adminRoles);
-//                userRepository.save(admin);
-//            });
-//        };
-//    }
-
 }
