@@ -1,6 +1,9 @@
 package com.librarymanagement.project.security.jwt;
 
+import lombok.Data;
+
 import java.util.List;
+
 
 public class UserInfoResponse {
     private Long id;

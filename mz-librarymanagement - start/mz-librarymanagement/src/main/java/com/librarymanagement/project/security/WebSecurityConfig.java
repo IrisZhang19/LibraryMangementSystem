@@ -112,47 +112,47 @@ public class WebSecurityConfig {
 
     //initialize some roles and users
 
-    @Bean
-    public CommandLineRunner initData(RoleRepository roleRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        return args -> {
-            // Retrieve or create roles
-            Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
-                    .orElseGet(() -> {
-                        Role newUserRole = new Role(AppRole.ROLE_USER);
-                        return roleRepository.save(newUserRole);
-                    });
-            Role adminRole = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
-                    .orElseGet(() -> {
-                        Role newAdminRole = new Role(AppRole.ROLE_ADMIN);
-                        return roleRepository.save(newAdminRole);
-                    });
-
-            Set<Role> userRoles = Set.of(userRole);
-            Set<Role> adminRoles = Set.of(userRole, adminRole);
-
-
-            // Create users if not already present
-            if (!userRepository.existsByUserName("user1")) {
-                User user1 = new User("user1", "user1@example.com", passwordEncoder.encode("password1"));
-                userRepository.save(user1);
-            }
-
-            if (!userRepository.existsByUserName("admin")) {
-                User admin = new User("admin", "admin@example.com", passwordEncoder.encode("adminPass"));
-                userRepository.save(admin);
-            }
-
-            // Update roles for existing users
-            userRepository.findByUserName("user1").ifPresent(user -> {
-                user.setRoles(userRoles);
-                userRepository.save(user);
-            });
-
-            userRepository.findByUserName("admin").ifPresent(admin -> {
-                admin.setRoles(adminRoles);
-                userRepository.save(admin);
-            });
-        };
-    }
+//    @Bean
+//    public CommandLineRunner initData(RoleRepository roleRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+//        return args -> {
+//            // Retrieve or create roles
+//            Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
+//                    .orElseGet(() -> {
+//                        Role newUserRole = new Role(AppRole.ROLE_USER);
+//                        return roleRepository.save(newUserRole);
+//                    });
+//            Role adminRole = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
+//                    .orElseGet(() -> {
+//                        Role newAdminRole = new Role(AppRole.ROLE_ADMIN);
+//                        return roleRepository.save(newAdminRole);
+//                    });
+//
+//            Set<Role> userRoles = Set.of(userRole);
+//            Set<Role> adminRoles = Set.of(userRole, adminRole);
+//
+//
+//            // Create users if not already present
+//            if (!userRepository.existsByUserName("user1")) {
+//                User user1 = new User("user1", "user1@example.com", passwordEncoder.encode("password1"));
+//                userRepository.save(user1);
+//            }
+//
+//            if (!userRepository.existsByUserName("admin")) {
+//                User admin = new User("admin", "admin@example.com", passwordEncoder.encode("adminPass"));
+//                userRepository.save(admin);
+//            }
+//
+//            // Update roles for existing users
+//            userRepository.findByUserName("user1").ifPresent(user -> {
+//                user.setRoles(userRoles);
+//                userRepository.save(user);
+//            });
+//
+//            userRepository.findByUserName("admin").ifPresent(admin -> {
+//                admin.setRoles(adminRoles);
+//                userRepository.save(admin);
+//            });
+//        };
+//    }
 
 }

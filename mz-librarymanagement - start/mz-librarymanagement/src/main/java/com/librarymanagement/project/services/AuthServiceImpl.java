@@ -84,16 +84,16 @@ public class AuthServiceImpl implements  AuthService{
      * @param signUpRequest contains the details of the user (username, email, password) for signup.
      * @return MessageResponse containing a success or error message.
      */
-    @Transactional
+//    @Transactional
     @Override
     public MessageResponse signupUser(SignupRequest signUpRequest) {
         // check if username and email are already exists
         if (userRepository.existsByUserName(signUpRequest.getUsername())) {
-            return new MessageResponse("Error: Username is already taken!");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error: Username is already taken!");
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return new MessageResponse("Error: Email is already in use!");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error: This Email is already registered!");
         }
 
         // Create new user's account
@@ -121,12 +121,13 @@ public class AuthServiceImpl implements  AuthService{
     @Transactional
     @Override
     public MessageResponse signupAdmin(SignupRequest signUpRequest) {
-        // Check if username and email are unique
+        // check if username and email are already exists
         if (userRepository.existsByUserName(signUpRequest.getUsername())) {
-            new MessageResponse("Error: Username is already taken!");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error: Username is already taken!");
         }
+
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-           new MessageResponse("Error: Email is already in use!");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error: This Email is already registered!");
         }
 
         // Create new admin account
@@ -135,7 +136,7 @@ public class AuthServiceImpl implements  AuthService{
                 encoder.encode(signUpRequest.getPassword()));
 
         Role adminRole = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
-                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role Admin not found"));
         user.setRoles(Collections.singleton(adminRole));
 
         userRepository.save(user);
