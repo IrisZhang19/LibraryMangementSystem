@@ -13,6 +13,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
+
+/**
+ * DataInitializer is responsible for initializing default roles and users in the database
+ * during the application startup. It ensures that the default roles (USER and ADMIN) exist
+ * and assigns them to the respective users (user1 and admin) if they are not already present.
+ */
 @Component
 public class DataInitializer {
 
@@ -25,6 +31,11 @@ public class DataInitializer {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    /**
+     * This method is called after the bean is created to initialize the default roles and users.
+     * It checks whether the roles (USER and ADMIN) exist and creates them if necessary.
+     * It also creates the default users (user1 and admin) and assigns the appropriate roles.
+     */
     @PostConstruct
     public void init(){
         Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)

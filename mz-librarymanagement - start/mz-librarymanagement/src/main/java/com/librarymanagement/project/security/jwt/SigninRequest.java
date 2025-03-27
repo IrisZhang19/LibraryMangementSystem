@@ -5,27 +5,22 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data Transfer Object (DTO) to representing sign in request.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SigninRequest {
+
+    /**
+     * The name of the user to sign in.
+     */
     private String username;
 
+    /**
+     * The password of sign in request.
+     */
     private String password;
 
-//    public String getUsername() {
-//        return username;
-//    }
-//
-//    public void setUsername(String username) {
-//        this.username = username;
-//    }
-//
-//    public String getPassword() {
-//        return password;
-//    }
-//
-//    public void setPassword(String password) {
-//        this.password = password;
-//    }
 }

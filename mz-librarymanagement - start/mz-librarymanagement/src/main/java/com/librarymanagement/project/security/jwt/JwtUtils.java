@@ -17,6 +17,9 @@ import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.Date;
 
+/**
+ * Utility class handling the creation, parsing, and validation of JWT tokens.
+ */
 @Component
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
@@ -27,6 +30,12 @@ public class JwtUtils {
     @Value("${spring.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
+    /**
+     * Extracts the JWT token from the "Authorization" header of the HTTP request.
+     *
+     * @param request the HttpServletRequest object
+     * @return the JWT token as a String, or null if invalid token
+     */
     public String getJwtFromHeader(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         logger.debug("Authorization Header: {}", bearerToken);
@@ -36,6 +45,12 @@ public class JwtUtils {
         return null;
     }
 
+    /**
+     * Generates a JWT token based on the username of the user details provided.
+     *
+     * @param userDetails the user details object containing the username
+     * @return the generated JWT token as a String
+     */
     public String generateTokenFromUsername(UserDetails userDetails) {
         String username = userDetails.getUsername();
         return Jwts.builder()
@@ -46,6 +61,12 @@ public class JwtUtils {
                 .compact();
     }
 
+    /**
+     * Extracts the username from the given JWT token.
+     *
+     * @param token the JWT token as a String
+     * @return the username extracted from the token
+     */
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parser()
                         .verifyWith((SecretKey) key())
@@ -53,10 +74,23 @@ public class JwtUtils {
                 .getPayload().getSubject();
     }
 
+    /**
+     * Returns the signing key used to sign and verify JWT tokens.
+     * The key is generated using the secret stored in the application properties.
+     *
+     * @return the secret key used for signing and verifying the JWT token
+     */
     private Key key() {
+
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
+    /**
+     * Validates the given JWT token.
+     *
+     * @param authToken the JWT token to be validated
+     * @return true if the token is valid, false otherwise
+     */
     public boolean validateJwtToken(String authToken) {
         try {
             Jwts.parser().verifyWith((SecretKey) key()).build().parseSignedClaims(authToken);

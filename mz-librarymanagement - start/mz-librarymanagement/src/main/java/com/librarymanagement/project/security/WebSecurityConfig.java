@@ -26,7 +26,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.util.Set;
 
-
+/**
+ * WebSecurityConfig class configures the security settings for the application using Spring Security.
+ * It includes authentication and authorization configurations, including JWT authentication and role-based access control.
+ */
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
@@ -64,7 +67,14 @@ public class WebSecurityConfig {
     }
 
 
-
+    /**
+     * Bean to configure the HTTP security settings for the application.
+     * This includes CSRF settings, exception handling, session management, and access control for various API endpoints.
+     *
+     * @param http the HttpSecurity object to configure the security settings
+     * @return the SecurityFilterChain for the HTTP security configuration
+     * @throws Exception if an error occurs while configuring the security settings
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
@@ -92,15 +102,5 @@ public class WebSecurityConfig {
                 UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web -> web.ignoring().requestMatchers("/v2/api-docs",
-                "/configuration/ui",
-                "/swagger-resources/**",
-                "/configuration/security",
-                "/swagger-ui.html",
-                "/webjars/**"));
     }
 }

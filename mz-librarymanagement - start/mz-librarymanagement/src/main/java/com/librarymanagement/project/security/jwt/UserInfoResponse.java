@@ -1,10 +1,11 @@
 package com.librarymanagement.project.security.jwt;
 
-import lombok.Data;
-
 import java.util.List;
 
-
+/**
+ * The Data Transfer Object representing user information.
+ * This is used for authentication actions.
+ */
 public class UserInfoResponse {
     private Long id;
     private String jwtToken;
@@ -26,14 +27,17 @@ public class UserInfoResponse {
     }
 
     public String getJwtToken() {
+
         return jwtToken;
     }
 
     public void setJwtToken(String jwtToken) {
+
         this.jwtToken = jwtToken;
     }
 
     public String getUsername() {
+
         return username;
     }
 
@@ -42,18 +46,22 @@ public class UserInfoResponse {
     }
 
     public List<String> getRoles() {
+
         return roles;
     }
 
     public void setRoles(List<String> roles) {
+
         this.roles = roles;
     }
 
     public Long getId() {
+
         return id;
     }
 
     public void setId(Long id) {
+
         this.id = id;
     }
 }

@@ -14,7 +14,11 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
+/**
+ * AuthEntryPointJwt implements AuthenticationEntryPoint that handles unauthorized
+ * access attempts and validation errors. It customizes the response for authentication exceptions
+ * by sending appropriate HTTP status codes and error messages.
+ */
 @Component
 public class AuthEntryPointJwt implements AuthenticationEntryPoint {
 
