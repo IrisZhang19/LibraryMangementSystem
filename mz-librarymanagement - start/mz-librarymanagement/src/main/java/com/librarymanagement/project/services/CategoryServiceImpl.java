@@ -129,7 +129,6 @@ public class CategoryServiceImpl implements CategoryService{
         // Check if another category with the same name exists, excluding the current category
         Category existingCategory = categoryRepository.findByCategoryName(categoryDTO.getCategoryName());
         if (existingCategory != null && existingCategory.getCategoryName().equals(savedCategory.getCategoryName())) {
-            System.out.println("check if name is in use");
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Category name is already in use");
         }
 

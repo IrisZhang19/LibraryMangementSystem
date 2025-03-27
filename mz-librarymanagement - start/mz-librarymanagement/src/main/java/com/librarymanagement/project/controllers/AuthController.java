@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller for handling authentication-related actions.
- * Provides endpoints including user siging in, regular user signing up and admin signing up.
+ * Provides endpoints including user signing in, regular user signing up and admin signing up.
  */
 @RestController
 @RequestMapping("/api/auth")

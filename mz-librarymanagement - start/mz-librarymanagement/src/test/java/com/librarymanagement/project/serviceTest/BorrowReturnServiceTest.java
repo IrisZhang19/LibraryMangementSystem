@@ -62,7 +62,7 @@ public class BorrowReturnServiceTest {
         MockitoAnnotations.openMocks(this); // Initializes mocks
 
         Set<Role> roles = new HashSet<>();
-        roles.add(new Role(AppRole.ROLE_USER));  // Your Role entity
+        roles.add(new Role(10, AppRole.ROLE_USER));  // Role entity
 
         user = new User();
         user.setUserId(1L);
@@ -70,6 +70,7 @@ public class BorrowReturnServiceTest {
         user.setRoles(roles);
         user.setPassword("password1");
         user.setEmail("user@test.com");
+
         // Convert Set<Role> to Set<GrantedAuthority> for security context
         authorities = roles.stream()
                 .map(role -> new SimpleGrantedAuthority(role.getRoleName().name()))

@@ -125,7 +125,7 @@ public class AuthServiceTest {
         String username = "testuser";
         String email = "test@user.com";
         String token = "valid jwt Token";
-        Role role = new Role(AppRole.ROLE_USER);
+        Role role = new Role(10, AppRole.ROLE_USER);
         Long userId = 1L;
         SignupRequest signupRequest = new SignupRequest(username, email, password);
 
@@ -219,9 +219,7 @@ public class AuthServiceTest {
         String password = "password";
         String username = "testadmin";
         String email = "test@admin.com";
-        String token = "valid jwt Token";
-        Role role = new Role(AppRole.ROLE_ADMIN);
-        Long userId = 1L;
+        Role role = new Role(10, AppRole.ROLE_ADMIN);
         SignupRequest signupRequest = new SignupRequest(username, email, password);
 
         when(userRepository.existsByUserName(anyString())).thenReturn(false);
@@ -241,13 +239,13 @@ public class AuthServiceTest {
 
     @Test
     public void TestSignupAdminFailRepeatedName(){
-        // Set up
+        // Set up singup request
         String password = "password";
         String username = "testadmin";
         String email = "test@admin.com";
-        Role role = new Role(AppRole.ROLE_ADMIN);
         SignupRequest signupRequest = new SignupRequest(username, email, password);
 
+        // Mock repository call
         when(userRepository.existsByUserName(anyString())).thenReturn(true);
 
         // Execute
@@ -268,7 +266,6 @@ public class AuthServiceTest {
         String password = "password";
         String username = "testadmin";
         String email = "test@admin.com";
-        Role role = new Role(AppRole.ROLE_ADMIN);
         SignupRequest signupRequest = new SignupRequest(username, email, password);
 
         when(userRepository.existsByUserName(anyString())).thenReturn(false);
@@ -288,13 +285,13 @@ public class AuthServiceTest {
 
     @Test
     public void TestSignupAdminFailRoleNotFound(){
-        // Set up
+        // Set up signup request
         String password = "password";
         String username = "testadmin";
         String email = "test@admin.com";
-        Role role = new Role(AppRole.ROLE_ADMIN);
         SignupRequest signupRequest = new SignupRequest(username, email, password);
 
+        // Mock repository calls
         when(userRepository.existsByUserName(anyString())).thenReturn(false);
         when(userRepository.existsByEmail(email)).thenReturn(false);
         when(roleRepository.findByRoleName(AppRole.ROLE_ADMIN)).thenThrow(
@@ -311,10 +308,5 @@ public class AuthServiceTest {
         // Verify method save never been called
         verify(userRepository, never()).save(any(User.class));
     }
-
-
-
-
-
 
 }

@@ -15,12 +15,13 @@ package com.librarymanagement.project.models;
 public enum AppRole {
 
     /**
-     * Admin role with the full access to the application.
+     * Admin role with the full access to the application, except borrowing and returning books.
      */
     ROLE_ADMIN,
 
     /**
-     * Regular user role with limited access to the application.
+     * Regular user role with limited access to the application,
+     * Allows retrieve, borrow and return their owen borrowed books.
      */
     ROLE_USER
 }

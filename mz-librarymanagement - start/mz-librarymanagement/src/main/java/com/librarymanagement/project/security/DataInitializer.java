@@ -29,12 +29,14 @@ public class DataInitializer {
     public void init(){
         Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
                     .orElseGet(() -> {
-                        Role newUserRole = new Role(AppRole.ROLE_USER);
+                        Role newUserRole = new Role();
+                        newUserRole.setRoleName(AppRole.ROLE_USER);
                         return roleRepository.save(newUserRole);
                     });
         Role adminRole = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
                 .orElseGet(() -> {
-                    Role newAdminRole = new Role(AppRole.ROLE_ADMIN);
+                    Role newAdminRole = new Role();
+                    newAdminRole.setRoleName(AppRole.ROLE_ADMIN);
                     return roleRepository.save(newAdminRole);
                 });
 

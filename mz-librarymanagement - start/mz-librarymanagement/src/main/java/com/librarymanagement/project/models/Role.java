@@ -38,12 +38,4 @@ public class Role {
     @Column(name = "role_name")
     private AppRole roleName;
 
-    /**
-     * Constructor to create a new Role with a specified role name.
-     *
-     * @param roleName The name of the role, represented by the {@link AppRole} enum.
-     */
-    public Role(AppRole roleName){
-        this.roleName = roleName;
-    }
 }

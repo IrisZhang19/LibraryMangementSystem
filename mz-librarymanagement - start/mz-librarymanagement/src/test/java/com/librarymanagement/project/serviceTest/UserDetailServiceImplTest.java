@@ -42,8 +42,7 @@ public class UserDetailServiceImplTest {
         user.setUserId(1L);
         user.setUserName(userName);
         user.setEmail(email);
-        Role roleUser = new Role(AppRole.ROLE_USER);
-        user.setRoles(new HashSet<>(Set.of(new Role(AppRole.ROLE_USER))));
+        user.setRoles(new HashSet<>(Set.of(new Role(10, AppRole.ROLE_USER))));
         when(userRepository.findByUserName(userName)).thenReturn(Optional.of(user)); // mock repository behavior
 
         // Execute the method

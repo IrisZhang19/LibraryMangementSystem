@@ -75,41 +75,16 @@ public class Book {
     @JoinColumn(name = "category_id")
     private Category category;
 
+
+    /**
+     * Validates that the total number of copies is no less than the available copies.
+     */
     @PrePersist
     @PreUpdate
     private void validateCopies() {
         if (this.copiesAvailable > this.copiesTotal) {
             throw new IllegalArgumentException("Total copies cannot be less than available copies");
         }
-    }
-    /**
-     * Constructor used for creating a Book object with just the title and author.
-     * This constructor is typically used in unit testing.
-     *
-     * @param bookId The id of the book
-     * @param title The title of the book.
-     * @param author The author of the book.
-     */
-    public Book(Long bookId, String title, String author){
-        this.title = title;
-        this.author = author;
-        this.bookId = bookId;
-    }
-
-    /**
-     * Constructor used for creating a Book object with the book's ID, title, author, and category.
-     * This constructor is used when a book is being fetched from the database or created with an existing ID.
-     *
-     * @param bookId The unique identifier for the book.
-     * @param title The title of the book.
-     * @param author The author of the book.
-     * @param category The category to which the book belongs.
-     */
-    public Book(Long bookId, String title, String author, Category category){
-        this.bookId = bookId;
-        this.title = title;
-        this.author = author;
-        this.category = category;
     }
 
     /**

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller for handling borrow and return API requests.
- * Provides endpoints for borrow and return books.
+ * Provides endpoints for borrowing and returning books.
  */
 @RestController
 @RequestMapping("/api")
