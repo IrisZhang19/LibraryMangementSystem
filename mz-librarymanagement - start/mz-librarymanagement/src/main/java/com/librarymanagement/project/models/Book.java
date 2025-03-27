@@ -75,6 +75,13 @@ public class Book {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @PrePersist
+    @PreUpdate
+    private void validateCopies() {
+        if (this.copiesAvailable > this.copiesTotal) {
+            throw new IllegalArgumentException("Total copies cannot be less than available copies");
+        }
+    }
     /**
      * Constructor used for creating a Book object with just the title and author.
      * This constructor is typically used in unit testing.

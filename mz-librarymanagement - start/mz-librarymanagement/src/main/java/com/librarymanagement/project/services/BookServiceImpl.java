@@ -55,8 +55,13 @@ public class BookServiceImpl implements  BookService{
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found"));
 
+        // Check if copies are set correctly
+        if( bookDTO.getCopiesTotal() < bookDTO.getCopiesAvailable()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Total copies cannot be less than available copies");
+        }
+        bookDTO.setCategory(category);
         Book book = modelMapper.map(bookDTO, Book.class);
-        book.setCategory(category);
+//        book.setCategory(category);
         Book savedBook = bookRepository.save(book);
         return modelMapper.map(savedBook, BookDTO.class);
     }
@@ -130,6 +135,11 @@ public class BookServiceImpl implements  BookService{
         // Check if the new name is valid
         if (bookDTO.getTitle() == null || bookDTO.getTitle().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book title must not be empty");
+        }
+
+        // Check if copies are set correctly
+        if( bookDTO.getCopiesTotal() < bookDTO.getCopiesAvailable()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Total copies cannot be less than available copies");
         }
 
         // Update the properties
