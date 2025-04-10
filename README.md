@@ -14,6 +14,18 @@ allows users( library members ) to browse, borrow and return books.
 - **Pagination:** Books are retrieved with pagination when browsing and searching.
 - **Borrow and Return Function:** It allows users (members) to borrow books and return the books that they borrowed.
 
+## Note on Branches
+Right now there are two branches:
+| Branch | Description |
+|--------|-------------|
+| `submitted-version` | Original version submitted for the assignment |
+| `main` | Improved version after submission |
+
+The `submitted-version` branch reflects exactly what was submitted during the assignment. It can be checked out with
+```bash
+git checkout submitted-version
+```
+The `main` branch contains improvements.
 
 ## Installation
 
