@@ -1,6 +1,7 @@
 package com.librarymanagement.project.payloads;
 
 import com.librarymanagement.project.models.Category;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,6 +38,16 @@ public class BookDTO {
      * The number of copies of the book that are currently available for borrowing.
      */
     private int copiesAvailable;
+
+    /**
+     * The number of copies of the book that are currently being borrowed.
+     */
+    private int copiesBorrowed;
+
+    /**
+     *  It shows if the book is active or not.
+     */
+    private boolean isActive;
 
     /**
      * A brief description of the book.

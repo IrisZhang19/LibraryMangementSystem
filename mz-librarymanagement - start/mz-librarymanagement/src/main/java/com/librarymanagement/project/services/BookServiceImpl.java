@@ -112,9 +112,21 @@ public class BookServiceImpl implements  BookService{
      */
     @Override
     public BookDTO deleteBook(Long bookId) {
+        // fetch the book from database
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+
+
+        // check if there are still borrowed and unreturned copies
+        int borrowed = book.getCopiesBorrowed();
+        if( borrowed > 0){
+            book.setActive(false); // set it to not active
+            bookRepository.save(book);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "still " + borrowed  + " copies borrowed!");
+        }
+        // if there is no borrowed copies, delete the book
         bookRepository.deleteById(bookId);
+
         return modelMapper.map(book, BookDTO.class);
     }
 
@@ -130,6 +142,11 @@ public class BookServiceImpl implements  BookService{
         // Find the book
         Book bookFromDB = bookRepository.findById(bookId)
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+
+        // Check if it's an inactive book
+        if(!bookFromDB.isActive()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot update inactive book");
+        }
 
         // Check if the new name is valid
         if (bookDTO.getTitle() == null || bookDTO.getTitle().trim().isEmpty()) {
@@ -148,6 +165,8 @@ public class BookServiceImpl implements  BookService{
         bookFromDB.setDescription(book.getDescription());
         bookFromDB.setCopiesTotal(book.getCopiesTotal());
         bookFromDB.setCopiesAvailable(book.getCopiesAvailable());
+        bookFromDB.setCopiesBorrowed(book.getCopiesBorrowed());
+        bookFromDB.setActive(true); // only deletion can mark a book as inactive
         if(book.getCategory() != null){
             Category category = categoryRepository.findById(book.getCategory().getCategoryId())
                     .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found"));

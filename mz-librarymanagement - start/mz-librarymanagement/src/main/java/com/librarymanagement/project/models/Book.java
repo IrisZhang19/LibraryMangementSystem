@@ -61,6 +61,22 @@ public class Book {
     private int copiesAvailable;
 
     /**
+     * The number of copies of the book that are currently being borrowed.
+     * This value is updated when books are borrowed or returned.
+     */
+    @Column(name = "copies_borrowed")
+    private int copiesBorrowed;
+
+    /**
+     *  It shows if the book is active or not.
+     *  If it's active members can still borrow it.
+     *  If it's not active, members cannot borrow it.
+     *  It is for safe deleting a book entity.
+     */
+    @Column(name = "is_active")
+    private boolean isActive;
+
+    /**
      * A description of the book.
      */
     @Column(name="description")
@@ -75,11 +91,21 @@ public class Book {
     @JoinColumn(name = "category_id")
     private Category category;
 
-
     /**
-     * Validates that the total number of copies is no less than the available copies.
+     * This method is called before a new book entity is saved to the database.
+     * Set initial values for copiesBorrowed and copiesAvailable.
      */
     @PrePersist
+    public void prePersist() {
+        this.copiesBorrowed = 0; // No books borrowed initially
+        this.copiesAvailable= this.copiesTotal; // All copies are available
+        this.isActive = true; // Active for borrowing
+    }
+
+    /**
+     * This method is called before book entity is updated in the database.
+     * Validates that the total number of copies is no less than the available copies.
+     */
     @PreUpdate
     private void validateCopies() {
         if (this.copiesAvailable > this.copiesTotal) {
@@ -103,6 +129,7 @@ public class Book {
     public void borrowOneCopy(){
         if(this.copiesAvailable > 0){
             this.copiesAvailable = this.copiesAvailable - 1;
+            this.copiesBorrowed = this.copiesBorrowed + 1;
         }
     }
 
@@ -113,6 +140,7 @@ public class Book {
     public void returnOneCopy() {
         if(this.copiesAvailable < this.copiesTotal) {
             this.copiesAvailable = this.copiesAvailable + 1;
+            this.copiesBorrowed = this.copiesBorrowed - 1;
         }
     }
 }

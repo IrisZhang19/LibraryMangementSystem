@@ -223,22 +223,9 @@ public class BookServiceTest {
         String title = "Book 1";
         String author = "Author 1";
         String newTitle = "Book Updated";
-
-        Book book = new Book();
-        book.setTitle(title);
-        book.setAuthor(author);
-        book.setCategory(category);
-
-        Book savedBook = new Book();
-        savedBook.setBookId(bookId);
-        savedBook.setTitle(newTitle);
-        savedBook.setAuthor(author);
-        savedBook.setCategory(category);
-
-        BookDTO bookDTO = new BookDTO();
-        bookDTO.setTitle(newTitle);
-        bookDTO.setAuthor(author);
-        bookDTO.setCategory(category);
+        Book book = new Book(bookId, title, author, 10, 8, 2, true, "", category);
+        Book savedBook = new Book(bookId, newTitle, author, 10, 8, 2, true, "", category);
+        BookDTO bookDTO = new BookDTO(bookId, newTitle, author, 10, 8, 2, true, "", category);
 
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
         when(bookRepository.save(book)).thenReturn(savedBook);
@@ -257,41 +244,6 @@ public class BookServiceTest {
         //verify
         verify(bookRepository, times(1)).findById(bookId);
         verify(bookRepository, times(1)).save(book);
-    }
-
-    @Test
-    public void TestUpdateBookFailBookInvalidRequest(){
-        //Set up
-        Long bookId = 1L;
-        Long categoryId = 1L;
-        String title = "Book 1";
-        String author = "Author 1";
-        String  categoryName = "category 1";
-        Category category = new Category(categoryId, categoryName);
-
-        Book book = new Book();
-        book.setBookId(bookId);
-        book.setTitle(title);
-        book.setAuthor(author);
-        book.setCategory(category);
-
-        BookDTO bookDTO = new BookDTO();
-        bookDTO.setAuthor(author);
-        bookDTO.setCategory(category);
-
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
-
-        // execute
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
-                bookService.updateBook(bookId, bookDTO));
-
-        // assert
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Book title must not be empty", exception.getReason());
-
-        //verify
-        verify(bookRepository, times(1)).findById(bookId);
-        verify(bookRepository, never()).save(any(Book.class));
     }
 
     @Test
@@ -317,20 +269,68 @@ public class BookServiceTest {
     }
 
     @Test
+    public void TestUpdateBookFailInactiveBook(){
+        //Set up
+        Long categoryId = 1L;
+        String  categoryName = "category 1";
+        Category category = new Category(categoryId, categoryName);
+        Long bookId = 10L;
+        String title = "Book 1";
+        String author = "Author 1";
+        String newTitle = "Book 1 updated";
+        Book book = new Book(bookId, title, author, 10, 8, 2, false, "", category);
+        BookDTO bookDTO = new BookDTO(bookId, newTitle, author, 10, 8, 2, false, "", category);
+
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+
+        // Execute and Assert
+        ResponseStatusException exception = assertThrows( ResponseStatusException.class, () ->
+                bookService.updateBook(bookId, bookDTO));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Cannot update inactive book", exception.getReason());
+
+        // Verify
+        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, never()).save(any(Book.class));
+    }
+
+    @Test
+    public void TestUpdateBookFailBookInvalidRequest(){
+        //Set up
+        Long bookId = 10L;
+        Long categoryId = 1L;
+        String title = "Book 1";
+        String author = "Author 1";
+        String  categoryName = "category 1";
+        Category category = new Category(categoryId, categoryName);
+
+        Book book = new Book(bookId, title, author, 10, 8, 2, true, "", category);
+        BookDTO bookDTO = new BookDTO(bookId, "", author, 10, 8, 2, true, "", category);
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+
+        // execute
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+                bookService.updateBook(bookId, bookDTO));
+
+        // assert
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Book title must not be empty", exception.getReason());
+
+        //verify
+        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, never()).save(any(Book.class));
+    }
+
+    @Test
     public void TestDeleteBookSuccess(){
         //Set up
         Long categoryId = 1L;
         String  categoryName = "category 1";
         Category category = new Category(categoryId, categoryName);
-        Long bookId = 1L;
+        Long bookId = 10L;
         String title = "Book 1";
         String author = "Author 1";
-        Book book = new Book();
-        book.setTitle(title);
-        book.setAuthor(author);
-        book.setCategory(category);
-        book.setBookId(bookId);
-
+        Book book = new Book(bookId, title, author, 10, 10, 0, true, "", category);
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
 
         // execute
@@ -344,7 +344,7 @@ public class BookServiceTest {
         assertEquals(category, result.getCategory());
 
         //verify
-        verify(bookRepository, times(1)).findById(categoryId);
+        verify(bookRepository, times(1)).findById(bookId);
         verify(bookRepository, times(1)).deleteById(bookId);
     }
 
@@ -365,6 +365,32 @@ public class BookServiceTest {
         verify(bookRepository, never()).deleteById(bookId);
     }
 
+    @Test
+    public void TestDeleteBookFailedUnreturnedCopies(){
+        //Set up
+        Long categoryId = 1L;
+        String  categoryName = "category 1";
+        Category category = new Category(categoryId, categoryName);
+        Long bookId = 10L;
+        String title = "Book 1";
+        String author = "Author 1";
+        Book book = new Book(bookId, title, author, 10, 8, 2, true, "", category);
+        Book savedBook = new Book(bookId, title, author, 10, 8, 2, false, "", category);
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.save(book)).thenReturn(savedBook);
 
+        // execute
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+                bookService.deleteBook(bookId));
+
+        // assert
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("still 2 copies borrowed!", exception.getReason());
+
+        //verify
+        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).save(book);
+        verify(bookRepository, never()).deleteById(bookId);
+    }
 
 }
