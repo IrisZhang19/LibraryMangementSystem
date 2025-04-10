@@ -2,6 +2,9 @@ package com.librarymanagement.project.serviceTest;
 
 
 import com.librarymanagement.project.MzLibrarymanagementApplication;
+import com.librarymanagement.project.exceptions.BusinessException;
+import com.librarymanagement.project.exceptions.ResourceNotFoundException;
+import com.librarymanagement.project.exceptions.ValidationException;
 import com.librarymanagement.project.models.Category;
 import com.librarymanagement.project.payloads.CategoryDTO;
 import com.librarymanagement.project.payloads.CategoryResponse;
@@ -72,11 +75,10 @@ public class CategoryServiceTest {
         categoryDTONew.setCategoryName(categoryName);
 
         // Execute and Assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+        ValidationException exception = assertThrows(ValidationException.class, () -> {
             categoryService.createCategory(categoryDTONew);
         });
-        assertEquals("Category name must not be empty", exception.getReason());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Category name must not be empty", exception.getMessage());
 
         // Verify
         verify(categoryRepository, never()).save(any());  // Ensure save is never called
@@ -93,11 +95,10 @@ public class CategoryServiceTest {
         when(categoryRepository.existsByCategoryNameIgnoreCase(categoryName)).thenReturn(true);
 
         // Execute and Assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+        ValidationException exception = assertThrows(ValidationException.class, () -> {
             categoryService.createCategory(categoryDTONew);
         });
-        assertEquals("Category name is already in use", exception.getReason());
-        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertEquals("Category name is already in use : " + categoryName, exception.getMessage());
 
         // Verify
         verify(categoryRepository, times(1)).existsByCategoryNameIgnoreCase(categoryName);
@@ -199,11 +200,11 @@ public class CategoryServiceTest {
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
         // Execute & Assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             categoryService.deleteCategory(categoryId);
         });
 
-        assertEquals("404 NOT_FOUND \"No categories found\"", exception.getMessage());
+        assertEquals("No categories found by id : " + categoryId, exception.getMessage());
 
         // Verify repository method was called
         verify(categoryRepository, times(1)).findById(categoryId);
@@ -219,12 +220,11 @@ public class CategoryServiceTest {
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
         when(bookRepository.existsByCategoryCategoryId(categoryId)).thenReturn(true);
         // Execute & Assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
             categoryService.deleteCategory(categoryId);
         });
 
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Cannot delete category, still books exist under the category", exception.getReason());
+        assertEquals("Cannot delete category, still books exist under the category", exception.getMessage());
         // Verify repository method was called
         verify(categoryRepository, times(1)).findById(categoryId);
         verify(bookRepository, times(1)).existsByCategoryCategoryId(categoryId);
@@ -275,11 +275,10 @@ public class CategoryServiceTest {
         when(categoryRepository.findByCategoryName(name)).thenReturn(existingCategory);
 
         // Execute and Assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+        ValidationException exception = assertThrows(ValidationException.class, () -> {
             categoryService.updateCategory(categoryId, categoryDTO);
         });
-        assertEquals("Category name is already in use", exception.getReason());
-        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertEquals("Category name is already in use : " + name, exception.getMessage());
 
         // Verify
         verify(categoryRepository, times(1)).findByCategoryName(name);
@@ -295,12 +294,11 @@ public class CategoryServiceTest {
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
         // Execute & Assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             categoryService.updateCategory(categoryId, categoryDTO);
         });
 
-        assertEquals("No categories found", exception.getReason());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("No categories found by id : " + categoryId, exception.getMessage());
 
         // Verify
         verify(categoryRepository, times(1)).findById(categoryId);

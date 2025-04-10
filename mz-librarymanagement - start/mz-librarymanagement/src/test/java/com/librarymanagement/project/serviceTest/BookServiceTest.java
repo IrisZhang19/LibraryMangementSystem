@@ -2,6 +2,9 @@ package com.librarymanagement.project.serviceTest;
 
 
 import com.librarymanagement.project.MzLibrarymanagementApplication;
+import com.librarymanagement.project.exceptions.BusinessException;
+import com.librarymanagement.project.exceptions.ResourceNotFoundException;
+import com.librarymanagement.project.exceptions.ValidationException;
 import com.librarymanagement.project.models.Book;
 import com.librarymanagement.project.models.Category;
 import com.librarymanagement.project.payloads.BookDTO;
@@ -109,12 +112,11 @@ public class BookServiceTest {
         bookDTO.setCategory(category);
 
         // execute
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+        ValidationException exception = assertThrows(ValidationException.class, () ->
                 bookService.addBook(categoryId, bookDTO) );
 
         // assert
-        assertEquals("Book title must not be empty", exception.getReason());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Book title must not be empty", exception.getMessage());
 
         //Verify book never saved to repository
         verify(bookRepository, never()).save(any(Book.class));
@@ -134,12 +136,11 @@ public class BookServiceTest {
         bookDTO.setTitle("");
 
         // execute
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+        ValidationException exception = assertThrows(ValidationException.class, () ->
                 bookService.addBook(categoryId, bookDTO) );
 
         // assert
-        assertEquals("Book title must not be empty", exception.getReason());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Book title must not be empty", exception.getMessage());
 
         //Verify book never saved to repository
         verify(bookRepository, never()).save(any(Book.class));
@@ -158,12 +159,11 @@ public class BookServiceTest {
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
         // Execute & Assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             bookService.addBook(categoryId, bookDTO);
         });
 
-        assertEquals("No categories found", exception.getReason());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("No categories found by category id: " + categoryId, exception.getMessage());
 
         // Verify
         verify(categoryRepository, times(1)).findById(categoryId);
@@ -251,17 +251,12 @@ public class BookServiceTest {
         //Set up
         Long bookId = 1L;
         BookDTO bookDTO = new BookDTO();
-        when(bookRepository.findById(bookId)).thenThrow(
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found")
-        );
+        when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
 
-        // execute
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+        // execute and assert
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                 bookService.updateBook(bookId, bookDTO));
-
-        // assert
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        assertEquals("No books found", exception.getReason());
+        assertEquals("No books found", exception.getMessage());
 
         //verify
         verify(bookRepository, times(1)).findById(bookId);
@@ -284,10 +279,9 @@ public class BookServiceTest {
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
 
         // Execute and Assert
-        ResponseStatusException exception = assertThrows( ResponseStatusException.class, () ->
+        BusinessException exception = assertThrows( BusinessException.class, () ->
                 bookService.updateBook(bookId, bookDTO));
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Cannot update inactive book", exception.getReason());
+        assertEquals("Cannot update inactive book", exception.getMessage());
 
         // Verify
         verify(bookRepository, times(1)).findById(bookId);
@@ -309,12 +303,11 @@ public class BookServiceTest {
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
 
         // execute
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+        ValidationException exception = assertThrows(ValidationException.class, () ->
                 bookService.updateBook(bookId, bookDTO));
 
         // assert
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Book title must not be empty", exception.getReason());
+        assertEquals("Book title must not be empty", exception.getMessage());
 
         //verify
         verify(bookRepository, times(1)).findById(bookId);
@@ -353,15 +346,12 @@ public class BookServiceTest {
     @Test
     public void TestDeleteBookFailNoBookFound(){
         Long bookId = 1L;
-        when(bookRepository.findById(bookId)).thenThrow(
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found")
-        );
+        when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                 bookService.deleteBook(bookId));
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        assertEquals("No books found", exception.getReason());
+        assertEquals("No books found by book id :"  + bookId, exception.getMessage());
 
         verify(bookRepository, times(1)).findById(bookId);
         verify(bookRepository, never()).save(any(Book.class));

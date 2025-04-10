@@ -3,6 +3,8 @@ package com.librarymanagement.project.serviceTest;
 
 import com.librarymanagement.project.MzLibrarymanagementApplication;
 import com.librarymanagement.project.TestConfig;
+import com.librarymanagement.project.exceptions.BusinessException;
+import com.librarymanagement.project.exceptions.ResourceNotFoundException;
 import com.librarymanagement.project.models.AppRole;
 import com.librarymanagement.project.models.Role;
 import com.librarymanagement.project.models.User;
@@ -69,7 +71,7 @@ public class AuthServiceTest {
 
 
     @Test
-    public void TestSignInFailSuccess(){
+    public void TestSignInSuccess(){
         // Set up
         String password = "password";
         String username = "testuser";
@@ -155,12 +157,11 @@ public class AuthServiceTest {
         when(userRepository.existsByUserName(username)).thenReturn(true);
 
         // Execute
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+        BusinessException exception = assertThrows(BusinessException.class, () ->
                 authService.signupUser(signupRequest));
 
         // Check the response fields
-        assertEquals("Error: Username is already taken!", exception.getReason());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Error: Username " +  username + " is already taken!", exception.getMessage());
 
         verify(userRepository, never()).save(any(User.class));
         // web security config initialize two users by default
@@ -177,12 +178,11 @@ public class AuthServiceTest {
         when(userRepository.existsByEmail(email)).thenReturn(true);
 
         // Execute
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+        BusinessException exception = assertThrows(BusinessException.class, () ->
                 authService.signupUser(signupRequest));
 
         // Check the response fields
-        assertEquals("Error: This Email is already registered!", exception.getReason());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Error: This Email " + email +  " is already registered!", exception.getMessage());
 
         // Verify method calls
         verify(userRepository, never()).save(any(User.class));
@@ -197,16 +197,14 @@ public class AuthServiceTest {
         SignupRequest signupRequest = new SignupRequest(username, email, password);
         when(userRepository.existsByUserName(username)).thenReturn(false);
         when(userRepository.existsByEmail(email)).thenReturn(false);
-        when(roleRepository.findByRoleName(AppRole.ROLE_USER)).thenThrow(
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Role User not found"));
+        when(roleRepository.findByRoleName(AppRole.ROLE_USER)).thenReturn(Optional.empty());
 
         // Execute
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                 authService.signupUser(signupRequest));
 
         // Check the response fields
-        assertEquals("Role User not found", exception.getReason());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("Role User not found", exception.getMessage());
 
         // Verify method calls
         verify(userRepository, never()).save(any(User.class));
@@ -249,12 +247,11 @@ public class AuthServiceTest {
         when(userRepository.existsByUserName(anyString())).thenReturn(true);
 
         // Execute
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+        BusinessException exception = assertThrows(BusinessException.class, () ->
                 authService.signupAdmin(signupRequest));
 
         // Check the exception
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Error: Username is already taken!", exception.getReason());
+        assertEquals("Error: Username " + username + " is already taken!", exception.getMessage());
 
         // Verify method save never been called
         verify(userRepository, never()).save(any(User.class));
@@ -272,12 +269,11 @@ public class AuthServiceTest {
         when(userRepository.existsByEmail(email)).thenReturn(true);
 
         // Execute
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+        BusinessException exception = assertThrows(BusinessException.class, () ->
                 authService.signupAdmin(signupRequest));
 
         // Check the exception
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Error: This Email is already registered!", exception.getReason());
+        assertEquals("Error: This Email " + email + " is already registered!", exception.getMessage());
 
         // Verify method save never been called
         verify(userRepository, never()).save(any(User.class));
@@ -294,16 +290,13 @@ public class AuthServiceTest {
         // Mock repository calls
         when(userRepository.existsByUserName(anyString())).thenReturn(false);
         when(userRepository.existsByEmail(email)).thenReturn(false);
-        when(roleRepository.findByRoleName(AppRole.ROLE_ADMIN)).thenThrow(
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Role Admin not found"));
-
+        when(roleRepository.findByRoleName(AppRole.ROLE_ADMIN)).thenReturn(Optional.empty());
         // Execute
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                 authService.signupAdmin(signupRequest));
 
         // Check the exception
-        assertEquals("Role Admin not found", exception.getReason());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("Role Admin not found", exception.getMessage());
 
         // Verify method save never been called
         verify(userRepository, never()).save(any(User.class));

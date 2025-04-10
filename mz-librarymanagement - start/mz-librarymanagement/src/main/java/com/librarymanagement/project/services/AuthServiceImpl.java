@@ -1,6 +1,8 @@
 package com.librarymanagement.project.services;
 
 
+import com.librarymanagement.project.exceptions.BusinessException;
+import com.librarymanagement.project.exceptions.ResourceNotFoundException;
 import com.librarymanagement.project.models.AppRole;
 import com.librarymanagement.project.models.Book;
 import com.librarymanagement.project.models.Role;
@@ -89,11 +91,11 @@ public class AuthServiceImpl implements  AuthService{
     public MessageResponse signupUser(SignupRequest signUpRequest) {
         // check if username and email are already exists
         if (userRepository.existsByUserName(signUpRequest.getUsername())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error: Username is already taken!");
+            throw new BusinessException("Error: Username " +  signUpRequest.getUsername() + " is already taken!");
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error: This Email is already registered!");
+            throw new BusinessException("Error: This Email " + signUpRequest.getEmail() +  " is already registered!");
         }
 
         // Create new user's account
@@ -104,7 +106,7 @@ public class AuthServiceImpl implements  AuthService{
         Set<Role> roles = new HashSet<>();
 
             Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Role User not found"));
             roles.add(userRole);
 
         user.setRoles(roles);
@@ -123,11 +125,11 @@ public class AuthServiceImpl implements  AuthService{
     public MessageResponse signupAdmin(SignupRequest signUpRequest) {
         // check if username and email are already exists
         if (userRepository.existsByUserName(signUpRequest.getUsername())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error: Username is already taken!");
+            throw new BusinessException("Error: Username " +  signUpRequest.getUsername() + " is already taken!");
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error: This Email is already registered!");
+            throw new BusinessException("Error: This Email " + signUpRequest.getEmail() +  " is already registered!");
         }
 
         // Create new admin account
@@ -136,7 +138,7 @@ public class AuthServiceImpl implements  AuthService{
                 encoder.encode(signUpRequest.getPassword()));
 
         Role adminRole = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role Admin not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Role Admin not found"));
         user.setRoles(Collections.singleton(adminRole));
 
         userRepository.save(user);

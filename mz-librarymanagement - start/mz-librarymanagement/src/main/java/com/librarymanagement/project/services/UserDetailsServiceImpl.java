@@ -1,5 +1,6 @@
 package com.librarymanagement.project.services;
 
+import com.librarymanagement.project.exceptions.ResourceNotFoundException;
 import com.librarymanagement.project.models.User;
 import com.librarymanagement.project.repositories.UserRepository;
 import com.librarymanagement.project.security.services.UserDetailsImpl;
@@ -35,7 +36,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUserName(username)
                 .orElseThrow( () ->
-                        new UsernameNotFoundException("User not found by user name: " + username));
+                        new ResourceNotFoundException("User not found by user name: " + username));
 
 
         return UserDetailsImpl.build(user);

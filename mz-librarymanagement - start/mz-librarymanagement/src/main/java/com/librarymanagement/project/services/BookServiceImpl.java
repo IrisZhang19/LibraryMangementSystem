@@ -1,6 +1,9 @@
 package com.librarymanagement.project.services;
 
 
+import com.librarymanagement.project.exceptions.BusinessException;
+import com.librarymanagement.project.exceptions.ResourceNotFoundException;
+import com.librarymanagement.project.exceptions.ValidationException;
 import com.librarymanagement.project.models.Book;
 import com.librarymanagement.project.models.Category;
 import com.librarymanagement.project.payloads.BookDTO;
@@ -48,16 +51,16 @@ public class BookServiceImpl implements  BookService{
     public BookDTO addBook(Long categoryId, BookDTO bookDTO) {
         // Check if the new title is valid
         if (bookDTO.getTitle() == null || bookDTO.getTitle().trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book title must not be empty");
+            throw new ValidationException("Book title must not be empty");
         }
 
         // Check if the category exists
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found"));
+                .orElseThrow(() -> new ResourceNotFoundException("No categories found by category id: " + categoryId));
 
         // Check if copies are set correctly
         if( bookDTO.getCopiesTotal() < bookDTO.getCopiesAvailable()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Total copies cannot be less than available copies");
+            throw new ValidationException("Total copies cannot be less than available copies");
         }
         bookDTO.setCategory(category);
         Book book = modelMapper.map(bookDTO, Book.class);
@@ -114,7 +117,7 @@ public class BookServiceImpl implements  BookService{
     public BookDTO deleteBook(Long bookId) {
         // Fetch the book from database
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+                .orElseThrow(() -> new ResourceNotFoundException("No books found by book id :"  + bookId));
 
         // Mark the book as inactive, soft deletion
        book.setActive(false);
@@ -133,21 +136,21 @@ public class BookServiceImpl implements  BookService{
     public BookDTO updateBook(Long bookId, BookDTO bookDTO) {
         // Find the book
         Book bookFromDB = bookRepository.findById(bookId)
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+                .orElseThrow(()-> new ResourceNotFoundException("No books found"));
 
         // Check if it's an inactive book
         if(!bookFromDB.isActive()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot update inactive book");
+            throw new BusinessException("Cannot update inactive book");
         }
 
         // Check if the new name is valid
         if (bookDTO.getTitle() == null || bookDTO.getTitle().trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book title must not be empty");
+            throw new ValidationException("Book title must not be empty");
         }
 
         // Check if copies are set correctly
         if( bookDTO.getCopiesTotal() < bookDTO.getCopiesAvailable()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Total copies cannot be less than available copies");
+            throw new ValidationException("Total copies cannot be less than available copies");
         }
 
         // Update the properties
@@ -161,7 +164,8 @@ public class BookServiceImpl implements  BookService{
         bookFromDB.setActive(true); // only deletion can mark a book as inactive
         if(book.getCategory() != null){
             Category category = categoryRepository.findById(book.getCategory().getCategoryId())
-                    .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found"));
+                    .orElseThrow( () -> new ResourceNotFoundException("No categories found by category id : "
+                            + book.getCategory().getCategoryId()));
             bookFromDB.setCategory(category);
         }
 
@@ -184,7 +188,7 @@ public class BookServiceImpl implements  BookService{
     public BookResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         // Find the category
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found"));
+                .orElseThrow(() -> new ResourceNotFoundException("No categories found"));
 
 
         // Construct page

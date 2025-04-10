@@ -2,6 +2,8 @@ package com.librarymanagement.project.serviceTest;
 
 
 import com.librarymanagement.project.MzLibrarymanagementApplication;
+import com.librarymanagement.project.exceptions.BusinessException;
+import com.librarymanagement.project.exceptions.ResourceNotFoundException;
 import com.librarymanagement.project.models.*;
 import com.librarymanagement.project.payloads.TransactionDTO;
 import com.librarymanagement.project.repositories.BookRepository;
@@ -167,12 +169,11 @@ public class BorrowReturnServiceTest {
         when(bookRepository.findById(10L)).thenReturn(Optional.empty());
 
         // Execute
-        ResponseStatusException exception = assertThrows( ResponseStatusException.class, () ->
+        ResourceNotFoundException exception = assertThrows( ResourceNotFoundException.class, () ->
                 borrowReturnService.borrowBook(book.getBookId()));
 
         // Assert to check exception
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        assertEquals("No books found", exception.getReason());
+        assertEquals("No books found by book id : " + book.getBookId(), exception.getMessage());
 
         // Verify find book by id is called once
         verify(bookRepository, times(1)).findById(10L);
@@ -190,12 +191,11 @@ public class BorrowReturnServiceTest {
         when(bookRepository.findById(10L)).thenReturn(Optional.empty());
 
         // Execute
-        ResponseStatusException exception = assertThrows( ResponseStatusException.class, () ->
+        ResourceNotFoundException exception = assertThrows( ResourceNotFoundException.class, () ->
                 borrowReturnService.borrowBook(10L));
 
         // Assert to check exception
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        assertEquals("No books found", exception.getReason());
+        assertEquals("No books found by book id : " + book.getBookId(), exception.getMessage());
 
         // Verify find book by id is called once
         verify(bookRepository, times(1)).findById(10L);
@@ -211,12 +211,11 @@ public class BorrowReturnServiceTest {
         when(userRepository.findByUserName(user.getUserName())).thenReturn(Optional.empty());
 
         // Execute
-        ResponseStatusException exception = assertThrows( ResponseStatusException.class, () ->
+        ResourceNotFoundException exception = assertThrows( ResourceNotFoundException.class, () ->
                 borrowReturnService.borrowBook(book.getBookId()));
 
         // Assert to check exception
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        assertEquals("No users found", exception.getReason());
+        assertEquals("No user found by username : " + user.getUserName(), exception.getMessage());
 
         // Verify find user by name is called once
         verify(userRepository, times(1)).findByUserName(user.getUserName());
@@ -233,12 +232,11 @@ public class BorrowReturnServiceTest {
         when(userRepository.findByUserName(user.getUserName())).thenReturn(Optional.empty());
 
         // Execute
-        ResponseStatusException exception = assertThrows( ResponseStatusException.class, () ->
+       ResourceNotFoundException exception = assertThrows( ResourceNotFoundException.class, () ->
                 borrowReturnService.borrowBook(book.getBookId()));
 
         // Assert to check exception
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        assertEquals("No users found", exception.getReason());
+        assertEquals("No user found by username : " + user.getUserName(), exception.getMessage());
 
         // Verify find user by name is called once
         verify(userRepository, times(1)).findByUserName(user.getUserName());
@@ -258,12 +256,11 @@ public class BorrowReturnServiceTest {
                 .thenReturn(Optional.of(transaction));  // Existing borrow transaction
 
         // Execute
-        ResponseStatusException exception = assertThrows( ResponseStatusException.class, () ->
+        BusinessException exception = assertThrows( BusinessException.class, () ->
                 borrowReturnService.borrowBook(book.getBookId()));
 
         // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Book already borrowed by you", exception.getReason());
+        assertEquals("Book already borrowed by you", exception.getMessage());
 
         // Verify
         verify(userRepository, times(1)).findByUserName(user.getUserName());
@@ -285,12 +282,11 @@ public class BorrowReturnServiceTest {
                 .thenReturn(Optional.empty());
 
         // Execute
-        ResponseStatusException exception = assertThrows( ResponseStatusException.class, () ->
+        BusinessException exception = assertThrows( BusinessException.class, () ->
                 borrowReturnService.returnBook(book.getBookId()));
 
         // Assertions
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Book is not in borrow with the user", exception.getReason());
+        assertEquals("Book is not in borrow with the user", exception.getMessage());
 
         // Verify book entity and transaction entity is updated once
         verify(bookRepository, times(1)).findById(book.getBookId());
@@ -310,21 +306,20 @@ public class BorrowReturnServiceTest {
         when(bookRepository.findById(10L)).thenReturn(Optional.of(book));
         when(transactionRepository.findByUser_UserIdAndBook_BookIdAndIsReturnedFalse(user.getUserId(), 10L))
                 .thenReturn(Optional.empty());  // No existing borrow history
-        when(transactionRepository.save(any(Transaction.class))).thenReturn(transaction);
+//        when(transactionRepository.save(any(Transaction.class))).thenReturn(transaction);
 
         // Execute
-        ResponseStatusException exception = assertThrows( ResponseStatusException.class, () ->
+        BusinessException exception = assertThrows( BusinessException.class, () ->
                 borrowReturnService.borrowBook(book.getBookId()));
 
         // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("No copies available", exception.getReason());
+        assertEquals("No copies available for this book", exception.getMessage());
 
         // Verify
         verify(userRepository, times(1)).findByUserName(user.getUserName());
         verify(bookRepository, times(1)).findById(book.getBookId());
-        verify(bookRepository, times(0)).save(any(Book.class));
-        verify(transactionRepository, times(0)).save(any(Transaction.class)); // Ensure save is not called for transaction
+        verify(bookRepository, never()).save(any(Book.class));
+        verify(transactionRepository, never()).save(any(Transaction.class)); // Ensure save is not called for transaction
     }
 
     @Test
@@ -338,10 +333,9 @@ public class BorrowReturnServiceTest {
         when(bookRepository.findById(10L)).thenReturn(Optional.of(book));
 
         // Execute and assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+        BusinessException exception = assertThrows(BusinessException.class, () ->
                 borrowReturnService.borrowBook(book.getBookId()));
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Book can no longer be borrowed", exception.getReason());
+        assertEquals("Book can no longer be borrowed", exception.getMessage());
 
         // Verify
         verify(bookRepository, never()).save(book);  // Ensure save is never called on bookRepository

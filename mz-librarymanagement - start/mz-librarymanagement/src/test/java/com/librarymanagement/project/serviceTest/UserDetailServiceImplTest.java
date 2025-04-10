@@ -2,6 +2,7 @@ package com.librarymanagement.project.serviceTest;
 
 
 import com.librarymanagement.project.MzLibrarymanagementApplication;
+import com.librarymanagement.project.exceptions.ResourceNotFoundException;
 import com.librarymanagement.project.models.AppRole;
 import com.librarymanagement.project.models.Role;
 import com.librarymanagement.project.models.User;
@@ -63,8 +64,10 @@ public class UserDetailServiceImplTest {
         when(userRepository.findByUserName(userName)).thenReturn(Optional.empty()); // mock repository behavior
 
         // Execute the method
-        assertThrows(UsernameNotFoundException.class, () ->
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                 userDetailsService.loadUserByUsername(userName));
+
+        assertEquals("User not found by user name: " + userName, exception.getMessage());
     }
 
 }

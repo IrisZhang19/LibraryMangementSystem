@@ -1,5 +1,8 @@
 package com.librarymanagement.project.services;
 
+import com.librarymanagement.project.exceptions.BusinessException;
+import com.librarymanagement.project.exceptions.ResourceNotFoundException;
+import com.librarymanagement.project.exceptions.ValidationException;
 import com.librarymanagement.project.models.Category;
 import com.librarymanagement.project.payloads.CategoryDTO;
 import com.librarymanagement.project.payloads.CategoryResponse;
@@ -83,14 +86,14 @@ public class CategoryServiceImpl implements CategoryService{
     public CategoryDTO createCategory(CategoryDTO categoryDTO) {
         // Check if the new name is valid
         if (categoryDTO.getCategoryName() == null || categoryDTO.getCategoryName().trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category name must not be empty");
+            throw new ValidationException("Category name must not be empty");
         }
 
         // Check if a category with the same name already exists
         Category category = modelMapper.map(categoryDTO, Category.class);
         boolean existName = categoryRepository.existsByCategoryNameIgnoreCase(category.getCategoryName());
         if(existName){
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Category name is already in use");
+            throw new ValidationException("Category name is already in use : " + categoryDTO.getCategoryName());
         }
 
         // Save category
@@ -111,12 +114,12 @@ public class CategoryServiceImpl implements CategoryService{
     public CategoryDTO deleteCategory(Long categoryId) {
         // Find  and delete the category
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found"));
+                .orElseThrow(() -> new ResourceNotFoundException("No categories found by id : " + categoryId));
 
         // Check if there is any book under this category
         boolean anyBooks = bookRepository.existsByCategoryCategoryId(category.getCategoryId());
         if(anyBooks){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete category, still books exist under the category");
+            throw new BusinessException("Cannot delete category, still books exist under the category");
         }
 
         categoryRepository.delete(category);
@@ -135,12 +138,12 @@ public class CategoryServiceImpl implements CategoryService{
     public CategoryDTO updateCategory(Long categoryId, CategoryDTO categoryDTO) {
         // Find the category by Id
         Category savedCategory = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found"));
+                .orElseThrow(() -> new ResourceNotFoundException("No categories found by id : " + categoryId));
 
         // Check if another category with the same name exists, excluding the current category
         Category existingCategory = categoryRepository.findByCategoryName(categoryDTO.getCategoryName());
         if (existingCategory != null && existingCategory.getCategoryName().equals(savedCategory.getCategoryName())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Category name is already in use");
+            throw new ValidationException("Category name is already in use : " +categoryDTO.getCategoryName());
         }
 
         Category category = modelMapper.map(categoryDTO, Category.class);

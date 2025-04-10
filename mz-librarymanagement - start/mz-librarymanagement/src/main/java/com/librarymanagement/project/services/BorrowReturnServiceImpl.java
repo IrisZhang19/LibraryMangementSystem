@@ -1,5 +1,7 @@
 package com.librarymanagement.project.services;
 
+import com.librarymanagement.project.exceptions.BusinessException;
+import com.librarymanagement.project.exceptions.ResourceNotFoundException;
 import com.librarymanagement.project.models.Book;
 import com.librarymanagement.project.models.Transaction;
 import com.librarymanagement.project.models.User;
@@ -54,23 +56,23 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
         Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         User user = userRepository.findByUserName(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No users found"));
+                .orElseThrow(() -> new ResourceNotFoundException("No user found by username : " + username));
         Long userId = user.getUserId();
 
         // Find the book and check if it's active and available
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+                .orElseThrow(() -> new ResourceNotFoundException( "No books found by book id : " + bookId));
         if(!book.isActive()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book can no longer be borrowed");
+            throw new BusinessException("Book can no longer be borrowed");
         }
         if(!book.isAvailable()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No copies available");
+            throw new BusinessException("No copies available for this book");
         }
 
         // Check if user has unreturned borrow of the same book
         Optional<Transaction> existingTranscation = transactionRepository.findByUser_UserIdAndBook_BookIdAndIsReturnedFalse(userId, bookId);
         if(existingTranscation.isPresent()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book already borrowed by you");
+            throw new BusinessException("Book already borrowed by you");
         }
 
         // Create transaction entity and save
@@ -103,17 +105,17 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
         Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         User user = userRepository.findByUserName(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No users found"));
+                .orElseThrow(() -> new ResourceNotFoundException("No user found by username : " + username));
         Long userId = user.getUserId();
 
         // Check the book
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+                .orElseThrow(() -> new ResourceNotFoundException( "No books found by book id : " + bookId));
 
         // Check if the user has a borrow record with this book
         Optional<Transaction> existingTransaction = transactionRepository.findByUser_UserIdAndBook_BookIdAndIsReturnedFalse(userId, bookId);
         if(!existingTransaction.isPresent()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book is not in borrow with the user");
+            throw new BusinessException("Book is not in borrow with the user");
         }
 
         // Update the transaction by returning the book
