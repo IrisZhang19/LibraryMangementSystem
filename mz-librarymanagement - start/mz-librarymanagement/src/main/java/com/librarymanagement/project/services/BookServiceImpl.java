@@ -61,7 +61,6 @@ public class BookServiceImpl implements  BookService{
         }
         bookDTO.setCategory(category);
         Book book = modelMapper.map(bookDTO, Book.class);
-//        book.setCategory(category);
         Book savedBook = bookRepository.save(book);
         return modelMapper.map(savedBook, BookDTO.class);
     }

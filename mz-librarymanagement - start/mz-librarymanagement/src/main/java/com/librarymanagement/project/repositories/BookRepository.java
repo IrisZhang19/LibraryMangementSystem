@@ -19,6 +19,14 @@ import java.util.List;
 public interface BookRepository extends JpaRepository<Book, Long>{
 
     /**
+     * Check if any book exist under given category.
+     *
+     * @param categoryId The id of the category to be checked.
+     * @return true if there are books exist under this category false otherwise.
+     */
+    boolean existsByCategoryCategoryId(Long categoryId);
+
+    /**
      * Finds books by their category with pagination support.
      *
      * @param category The category of the books to retrieve.

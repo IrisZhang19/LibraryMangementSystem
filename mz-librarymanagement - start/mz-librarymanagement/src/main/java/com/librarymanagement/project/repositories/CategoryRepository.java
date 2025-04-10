@@ -22,4 +22,12 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
      * @return The Category entity found, if not null.
      */
     Category findByCategoryName(String categoryName);
+
+    /**
+     * Check if any category has this given categoryName.
+     *
+     * @param categoryName The name to be checked.
+     * @return True if the name is already in use false otherwise.
+     */
+    boolean existsByCategoryNameIgnoreCase(String categoryName);
 }

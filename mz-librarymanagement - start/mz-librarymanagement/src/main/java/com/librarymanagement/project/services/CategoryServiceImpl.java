@@ -3,6 +3,7 @@ package com.librarymanagement.project.services;
 import com.librarymanagement.project.models.Category;
 import com.librarymanagement.project.payloads.CategoryDTO;
 import com.librarymanagement.project.payloads.CategoryResponse;
+import com.librarymanagement.project.repositories.BookRepository;
 import com.librarymanagement.project.repositories.CategoryRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,9 @@ public class CategoryServiceImpl implements CategoryService{
 
     @Autowired
     public CategoryRepository categoryRepository;
+
+    @Autowired
+    public BookRepository bookRepository;
 
     @Autowired
     public ModelMapper modelMapper;
@@ -84,8 +88,8 @@ public class CategoryServiceImpl implements CategoryService{
 
         // Check if a category with the same name already exists
         Category category = modelMapper.map(categoryDTO, Category.class);
-        Category categoryFromDb = categoryRepository.findByCategoryName(category.getCategoryName());
-        if(categoryFromDb != null){
+        boolean existName = categoryRepository.existsByCategoryNameIgnoreCase(category.getCategoryName());
+        if(existName){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Category name is already in use");
         }
 
@@ -101,13 +105,20 @@ public class CategoryServiceImpl implements CategoryService{
      *
      * @param categoryId The ID of the category to be deleted.
      * @return The deleted {@link CategoryDTO}.
-     * @throws ResponseStatusException If the category is not found.
+     * @throws ResponseStatusException If the category is not found or still books exist under the category.
      */
     @Override
     public CategoryDTO deleteCategory(Long categoryId) {
         // Find  and delete the category
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found"));
+
+        // Check if there is any book under this category
+        boolean anyBooks = bookRepository.existsByCategoryCategoryId(category.getCategoryId());
+        if(anyBooks){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete category, still books exist under the category");
+        }
+
         categoryRepository.delete(category);
         return modelMapper.map(category, CategoryDTO.class);
     }

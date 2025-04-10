@@ -5,6 +5,7 @@ import com.librarymanagement.project.MzLibrarymanagementApplication;
 import com.librarymanagement.project.models.Category;
 import com.librarymanagement.project.payloads.CategoryDTO;
 import com.librarymanagement.project.payloads.CategoryResponse;
+import com.librarymanagement.project.repositories.BookRepository;
 import com.librarymanagement.project.repositories.CategoryRepository;
 import com.librarymanagement.project.services.CategoryService;
 import org.junit.jupiter.api.Test;
@@ -34,15 +35,20 @@ public class CategoryServiceTest {
     @Autowired
     private CategoryService categoryService;
 
+    @MockitoBean
+    private BookRepository bookRepository;
+
     @Test
     public void TestCreateCategorySuccess(){
         //Set up
         String name = "Category 1";
-        CategoryDTO categoryDTO = new CategoryDTO(1L,"Category 1");
-        Category category = new Category(1L, "Category 1");
-        Category savedCategory = new Category(1L, "Category 1");
+        CategoryDTO categoryDTO = new CategoryDTO();
+        categoryDTO.setCategoryName(name);
+        Category category = new Category();
+        category.setCategoryName(name);
+        Category savedCategory = new Category(1L, name);
 
-        when(categoryRepository.findByCategoryName(name)).thenReturn(null);
+        when(categoryRepository.existsByCategoryNameIgnoreCase(name)).thenReturn(false);
         when(categoryRepository.save(category)).thenReturn(savedCategory);
 
         // Execute
@@ -54,7 +60,7 @@ public class CategoryServiceTest {
         assertEquals(1L, result.getCategoryId());
 
         // Verify
-        verify(categoryRepository, times(1)).findByCategoryName(name);
+        verify(categoryRepository, times(1)).existsByCategoryNameIgnoreCase(name);
         verify(categoryRepository, times(1)).save(category);
     }
 
@@ -79,14 +85,12 @@ public class CategoryServiceTest {
     @Test
     public void TestCreateCategoryFailNameExists(){
         // Set up
-        Long categoryId = 1L;
         String categoryName = "category 1";
-        Category categoryExisting = new Category(categoryId, categoryName);
         Category categoryNew = new Category();
         categoryNew.setCategoryName(categoryName);
         CategoryDTO categoryDTONew = new CategoryDTO();
         categoryDTONew.setCategoryName(categoryName);
-        when(categoryRepository.findByCategoryName(categoryName)).thenReturn(categoryExisting);
+        when(categoryRepository.existsByCategoryNameIgnoreCase(categoryName)).thenReturn(true);
 
         // Execute and Assert
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
@@ -96,7 +100,7 @@ public class CategoryServiceTest {
         assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
 
         // Verify
-        verify(categoryRepository, times(1)).findByCategoryName(categoryName);
+        verify(categoryRepository, times(1)).existsByCategoryNameIgnoreCase(categoryName);
         verify(categoryRepository, never()).save(any());  // Ensure save is never called
     }
 
@@ -171,6 +175,7 @@ public class CategoryServiceTest {
 
         // Mock repository behavior
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(bookRepository.existsByCategoryCategoryId(categoryId)).thenReturn(false);
         doNothing().when(categoryRepository).delete(category);  // Mocking void delete method
 
         // Execute
@@ -202,6 +207,27 @@ public class CategoryServiceTest {
 
         // Verify repository method was called
         verify(categoryRepository, times(1)).findById(categoryId);
+        verify(categoryRepository, never()).delete(any());  // Ensure delete is never called
+    }
+    @Test
+    void TestDeleteCategoryCategoryFailBooksExist() {
+        // Arrange
+        Long categoryId = 1L;
+        Category category = new Category(categoryId, "Category Test");
+
+        // Mock repository behavior
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(bookRepository.existsByCategoryCategoryId(categoryId)).thenReturn(true);
+        // Execute & Assert
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            categoryService.deleteCategory(categoryId);
+        });
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Cannot delete category, still books exist under the category", exception.getReason());
+        // Verify repository method was called
+        verify(categoryRepository, times(1)).findById(categoryId);
+        verify(bookRepository, times(1)).existsByCategoryCategoryId(categoryId);
         verify(categoryRepository, never()).delete(any());  // Ensure delete is never called
     }
 
