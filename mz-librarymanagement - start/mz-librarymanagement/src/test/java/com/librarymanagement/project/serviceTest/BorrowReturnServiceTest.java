@@ -81,6 +81,7 @@ public class BorrowReturnServiceTest {
         book.setTitle("Test Book");
         book.setCopiesTotal(5);
         book.setCopiesAvailable(3);
+        book.setActive(true);
 
         LocalDate borrowTime = LocalDate.now();
         transaction = new Transaction();
@@ -326,4 +327,25 @@ public class BorrowReturnServiceTest {
         verify(transactionRepository, times(0)).save(any(Transaction.class)); // Ensure save is not called for transaction
     }
 
+    @Test
+    public void TestBorrowBookFailInactive(){
+        // Set up
+        UserDetails userDetails = new UserDetailsImpl(1L, user.getUserName(),  user.getEmail(), user.getPassword(), authorities);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        book.setActive(false);
+        when(userRepository.findByUserName(user.getUserName())).thenReturn(Optional.of(user));
+        when(bookRepository.findById(10L)).thenReturn(Optional.of(book));
+
+        // Execute and assert
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+                borrowReturnService.borrowBook(book.getBookId()));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Book can no longer be borrowed", exception.getReason());
+
+        // Verify
+        verify(bookRepository, never()).save(book);  // Ensure save is never called on bookRepository
+        verify(transactionRepository, never()).save(any(Transaction.class)); // Ensure save is never called on transactionRepository
+
+    }
 }

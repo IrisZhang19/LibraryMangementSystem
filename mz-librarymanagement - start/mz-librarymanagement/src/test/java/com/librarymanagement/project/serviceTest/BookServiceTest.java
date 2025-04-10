@@ -322,7 +322,7 @@ public class BookServiceTest {
     }
 
     @Test
-    public void TestDeleteBookSuccess(){
+    public void TestDeleteBookSuccessNoBorrowedCopies(){
         //Set up
         Long categoryId = 1L;
         String  categoryName = "category 1";
@@ -331,7 +331,9 @@ public class BookServiceTest {
         String title = "Book 1";
         String author = "Author 1";
         Book book = new Book(bookId, title, author, 10, 10, 0, true, "", category);
+        Book savedBook = new Book(bookId, title, author, 10, 10, 0, false, "", category);
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.save(savedBook)).thenReturn(savedBook);
 
         // execute
         BookDTO result = bookService.deleteBook(bookId);
@@ -342,10 +344,10 @@ public class BookServiceTest {
         assertEquals(author, result.getAuthor());
         assertEquals(bookId, result.getBookId());
         assertEquals(category, result.getCategory());
-
+        assertFalse(result.isActive());
         //verify
         verify(bookRepository, times(1)).findById(bookId);
-        verify(bookRepository, times(1)).deleteById(bookId);
+        verify(bookRepository, times(1)).save(book);
     }
 
     @Test
@@ -362,11 +364,12 @@ public class BookServiceTest {
         assertEquals("No books found", exception.getReason());
 
         verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, never()).save(any(Book.class));
         verify(bookRepository, never()).deleteById(bookId);
     }
 
     @Test
-    public void TestDeleteBookFailedUnreturnedCopies(){
+    public void TestDeleteBookSuccessUnreturnedCopies(){
         //Set up
         Long categoryId = 1L;
         String  categoryName = "category 1";
@@ -377,16 +380,13 @@ public class BookServiceTest {
         Book book = new Book(bookId, title, author, 10, 8, 2, true, "", category);
         Book savedBook = new Book(bookId, title, author, 10, 8, 2, false, "", category);
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
-        when(bookRepository.save(book)).thenReturn(savedBook);
+        when(bookRepository.save(savedBook)).thenReturn(savedBook);
 
         // execute
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
-                bookService.deleteBook(bookId));
+        BookDTO result =  bookService.deleteBook(bookId);
 
         // assert
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("still 2 copies borrowed!", exception.getReason());
-
+        assertFalse(result.isActive());
         //verify
         verify(bookRepository, times(1)).findById(bookId);
         verify(bookRepository, times(1)).save(book);

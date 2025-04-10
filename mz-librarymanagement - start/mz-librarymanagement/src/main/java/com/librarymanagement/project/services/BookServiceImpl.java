@@ -112,22 +112,14 @@ public class BookServiceImpl implements  BookService{
      */
     @Override
     public BookDTO deleteBook(Long bookId) {
-        // fetch the book from database
+        // Fetch the book from database
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
 
-
-        // check if there are still borrowed and unreturned copies
-        int borrowed = book.getCopiesBorrowed();
-        if( borrowed > 0){
-            book.setActive(false); // set it to not active
-            bookRepository.save(book);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "still " + borrowed  + " copies borrowed!");
-        }
-        // if there is no borrowed copies, delete the book
-        bookRepository.deleteById(bookId);
-
-        return modelMapper.map(book, BookDTO.class);
+        // Mark the book as inactive, soft deletion
+       book.setActive(false);
+       Book savedBook = bookRepository.save(book);
+       return modelMapper.map(savedBook, BookDTO.class);
     }
 
     /**
@@ -287,6 +279,5 @@ public class BookServiceImpl implements  BookService{
         bookResponse.setLastPage(pageBooks.isLast());
         return bookResponse;
     }
-
 
 }

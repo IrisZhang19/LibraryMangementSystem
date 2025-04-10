@@ -57,9 +57,12 @@ public class BorrowReturnServiceImpl implements BorrowReturnService{
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No users found"));
         Long userId = user.getUserId();
 
-        // Find the book and check availability
+        // Find the book and check if it's active and available
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No books found"));
+        if(!book.isActive()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book can no longer be borrowed");
+        }
         if(!book.isAvailable()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No copies available");
         }
