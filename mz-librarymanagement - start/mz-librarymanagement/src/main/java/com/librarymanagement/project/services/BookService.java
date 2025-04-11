@@ -47,6 +47,16 @@ public interface BookService {
     BookDTO updateBook(Long bookId, BookDTO bookDTO);
 
     /**
+     * Partially updates the details of an existing book.
+     * Do not need all the fields in the input BookDTO.
+     *
+     * @param bookId The ID of the book to update.
+     * @param bookDTO The {@link BookDTO} containing the updated book details.
+     * @return The updated {@link BookDTO}.
+     */
+    BookDTO partialUpdateBook(Long bookId, BookDTO bookDTO);
+
+    /**
      * Retrieves a paginated list of books that belong to a specific category.
      *
      * @param categoryId The ID of the category to filter books by.
@@ -81,4 +91,6 @@ public interface BookService {
      * @return A {@link BookResponse} containing a list of books with titles matching the search term and pagination details.
      */
     BookResponse searchByTitle(String title, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
+
+
 }

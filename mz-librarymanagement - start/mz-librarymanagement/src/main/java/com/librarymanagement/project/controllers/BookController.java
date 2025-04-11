@@ -151,4 +151,20 @@ public class BookController {
         return new ResponseEntity<>(updatedBookDTO, HttpStatus.OK);
     }
 
+    /**
+     * Partially updates a book's information by its ID.
+     * Do not need all the fields in the input BookDTO.
+     *
+     * @param bookId the ID of the book to update.
+     * @param bookDTO the new book data transfer object with updated details.
+     * @return the updated BookDTO.
+     */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PatchMapping("/admin/books/{bookId}")
+    public ResponseEntity<BookDTO> partialUpdateBook(@PathVariable Long bookId,
+                                                     @RequestBody BookDTO bookDTO){
+        BookDTO updatedBookDTO = bookService.partialUpdateBook(bookId, bookDTO);
+        return new ResponseEntity<>(updatedBookDTO, HttpStatus.OK);
+    }
+
 }

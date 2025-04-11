@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,7 @@ public class BookServiceImpl implements  BookService{
 
     @Autowired
     private ModelMapper modelMapper;
+
     /**
      * Adds a new book to the system and associates it with a category.
      *
@@ -49,19 +51,20 @@ public class BookServiceImpl implements  BookService{
     @Transactional
     @Override
     public BookDTO addBook(Long categoryId, BookDTO bookDTO) {
+        // Check if the category exists
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("No categories found by category id: " + categoryId));
+
         // Check if the new title is valid
         if (bookDTO.getTitle() == null || bookDTO.getTitle().trim().isEmpty()) {
             throw new ValidationException("Book title must not be empty");
         }
 
-        // Check if the category exists
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("No categories found by category id: " + categoryId));
-
         // Check if copies are set correctly
-        if( bookDTO.getCopiesTotal() < bookDTO.getCopiesAvailable()){
-            throw new ValidationException("Total copies cannot be less than available copies");
+        if( bookDTO.getCopiesTotal() <= 0){
+            throw new ValidationException("Total copies must be provided and more than 0");
         }
+
         bookDTO.setCategory(category);
         Book book = modelMapper.map(bookDTO, Book.class);
         Book savedBook = bookRepository.save(book);
@@ -159,7 +162,7 @@ public class BookServiceImpl implements  BookService{
         bookFromDB.setAuthor(book.getAuthor());
         bookFromDB.setDescription(book.getDescription());
         bookFromDB.setCopiesTotal(book.getCopiesTotal());
-        bookFromDB.setCopiesAvailable(book.getCopiesAvailable());
+        bookFromDB.setCopiesAvailable(book.getCopiesTotal() - book.getCopiesBorrowed());
         bookFromDB.setCopiesBorrowed(book.getCopiesBorrowed());
         bookFromDB.setActive(true); // only deletion can mark a book as inactive
         if(book.getCategory() != null){
@@ -171,6 +174,56 @@ public class BookServiceImpl implements  BookService{
 
         Book savedBook = bookRepository.save(bookFromDB);
 
+        return modelMapper.map(savedBook, BookDTO.class);
+    }
+
+    /**
+     * Partially updates the details of an existing book.
+     * Do not need all the fields in the input BookDTO.
+     *
+     * @param bookId The ID of the book to update.
+     * @param bookDTO The {@link BookDTO} containing the updated book details.
+     * @return The updated {@link BookDTO}.
+     */
+    @Override
+    public BookDTO partialUpdateBook(Long bookId, BookDTO bookDTO) {
+        // Fetch the book
+        Book bookFromDB = bookRepository.findById(bookId)
+                .orElseThrow(()-> new ResourceNotFoundException("No books found by id : "  + bookId));
+
+        // Check if it's an inactive book
+        if(!bookFromDB.isActive()){
+            throw new BusinessException("Cannot update inactive book");
+        }
+
+        // Update and construct the book
+        if (bookDTO.getTitle() != null && !bookDTO.getTitle().trim().isEmpty()) {
+            bookFromDB.setTitle(bookDTO.getTitle());
+        }
+
+        if(bookDTO.getAuthor() != null && !bookDTO.getAuthor().trim().isEmpty()){
+            bookFromDB.setAuthor(bookDTO.getAuthor());
+        }
+
+        if(bookDTO.getCopiesTotal() > 0){
+            bookFromDB.setCopiesTotal(bookDTO.getCopiesTotal());
+            if(bookDTO.getCopiesTotal() < bookFromDB.getCopiesBorrowed()){
+                throw new ValidationException("Total copies cannot be less than borrowed copies");
+            }
+
+            bookFromDB.setCopiesAvailable(bookFromDB.getCopiesTotal() - bookFromDB.getCopiesBorrowed());
+        }
+
+        if(bookDTO.getDescription() != null && !bookDTO.getDescription().trim().isEmpty()){
+            bookFromDB.setDescription(bookDTO.getDescription());
+        }
+
+        if(bookDTO.getCategory() != null && categoryRepository.existsById(bookDTO.getCategory().getCategoryId())){
+            Category category = categoryRepository.findById(bookDTO.getCategory().getCategoryId()).orElseThrow();
+            bookFromDB.setCategory(category);
+        }
+
+        Book savedBook = bookRepository.save(bookFromDB);
         return modelMapper.map(savedBook, BookDTO.class);
     }
 
