@@ -1,7 +1,6 @@
 package com.librarymanagement.project.serviceTest;
 
 
-import com.librarymanagement.project.MzLibrarymanagementApplication;
 import com.librarymanagement.project.exceptions.BusinessException;
 import com.librarymanagement.project.exceptions.ResourceNotFoundException;
 import com.librarymanagement.project.exceptions.ValidationException;
@@ -9,22 +8,19 @@ import com.librarymanagement.project.models.Book;
 import com.librarymanagement.project.models.Category;
 import com.librarymanagement.project.payloads.BookDTO;
 import com.librarymanagement.project.payloads.BookResponse;
-import com.librarymanagement.project.payloads.CategoryDTO;
 import com.librarymanagement.project.repositories.BookRepository;
 import com.librarymanagement.project.repositories.CategoryRepository;
-import com.librarymanagement.project.services.BookService;
+import com.librarymanagement.project.services.BookServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,18 +28,21 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@ContextConfiguration(classes = MzLibrarymanagementApplication.class)
+
+@ExtendWith(MockitoExtension.class)
 public class BookServiceTest {
 
-    @MockitoBean
+    @Mock
     private BookRepository bookRepository;
 
-    @MockitoBean
+    @Mock
     private CategoryRepository categoryRepository;
 
-    @Autowired
-    private BookService bookService;
+    @Mock
+    private ModelMapper modelMapper;
+
+    @InjectMocks
+    private BookServiceImpl bookService;
 
     private Long categoryId;
     private String categoryName;
@@ -76,10 +75,14 @@ public class BookServiceTest {
         book.setCategory(category);
 
         Book savedBook = new Book(bookId, title, author, 10, 10, 0, true, "", category);
+        BookDTO savedBookDTO = new BookDTO(bookId, title, author, 10, 10, 0, true, "", category);
 
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(modelMapper.map(bookDTO, Book.class)).thenReturn(book);
         when(bookRepository.save(book)).thenReturn(savedBook);
+        when(modelMapper.map(savedBook, BookDTO.class)).thenReturn(savedBookDTO);
+
 
         // execute
         BookDTO result = bookService.addBook(categoryId, bookDTO);
@@ -198,16 +201,13 @@ public class BookServiceTest {
         Long bookId = 1L;
         String title = "Book 1";
         String author = "Author 1";
-        Book book = new Book();
-        book.setBookId(bookId);
-        book.setTitle(title);
-        book.setAuthor(author);
-        book.setCategory(category);
+        Book book = new Book(bookId, title, author, 10, 8, 2, true, "", category);
         List<Book> books = List.of(book);
         Page<Book> bookPage = new PageImpl<>(books);
+        BookDTO bookDTO = new BookDTO(bookId, title, author, 10, 8, 2, true, "", category);
 
         when(bookRepository.findAll(any(Pageable.class))).thenReturn(bookPage);
-
+        when(modelMapper.map(book, BookDTO.class)).thenReturn(bookDTO);
         // execute
         BookResponse result = bookService.getAllBooks(pageNumber, pageSize, sortBy, sortOrder);
 
@@ -237,13 +237,16 @@ public class BookServiceTest {
         String title = "Book 1";
         String author = "Author 1";
         String newTitle = "Book Updated";
-        Book book = new Book(bookId, title, author, 10, 8, 2, true, "", category);
+        Book bookFromDB = new Book(bookId, title, author, 10, 8, 2, true, "", category);
         Book savedBook = new Book(bookId, newTitle, author, 10, 8, 2, true, "", category);
         BookDTO bookDTO = new BookDTO(bookId, newTitle, author, 10, 8, 2, true, "", category);
+        Book newBook = new Book(bookId, newTitle, author, 10, 8, 2, true, "", category);
 
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
-        when(bookRepository.save(book)).thenReturn(savedBook);
+        when(modelMapper.map(bookDTO, Book.class)).thenReturn(newBook);
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(bookFromDB));
+        when(bookRepository.save(bookFromDB)).thenReturn(savedBook);
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(modelMapper.map(savedBook, BookDTO.class)).thenReturn(bookDTO);
 
         // execute
         BookDTO result = bookService.updateBook(bookId, bookDTO);
@@ -257,7 +260,7 @@ public class BookServiceTest {
 
         //verify
         verify(bookRepository, times(1)).findById(bookId);
-        verify(bookRepository, times(1)).save(book);
+        verify(bookRepository, times(1)).save(bookFromDB);
     }
 
     @Test
@@ -271,16 +274,16 @@ public class BookServiceTest {
         String title = "Book 1";
         String author = "Author 1";
         String newTitle = "Book Updated";
-        Book book = new Book(bookId, title, author, 10, 8, 2, true, "", category);
+        Book bookFromDB = new Book(bookId, title, author, 10, 8, 2, true, "", category);
         Book savedBook = new Book(bookId, newTitle, author, 10, 8, 2, true, "", category);
+        BookDTO savedBookDTO = new BookDTO(bookId, newTitle, author, 10, 8, 2, true, "", category);
+
         BookDTO bookDTO = new BookDTO();
         bookDTO.setBookId(bookId);
         bookDTO.setTitle(newTitle);
-
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
-        when(bookRepository.save(book)).thenReturn(savedBook);
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
-
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(bookFromDB));
+        when(bookRepository.save(bookFromDB)).thenReturn(savedBook);
+        when(modelMapper.map(savedBook, BookDTO.class)).thenReturn(savedBookDTO);
         // execute
         BookDTO result = bookService.partialUpdateBook(bookId, bookDTO);
 
@@ -293,7 +296,7 @@ public class BookServiceTest {
 
         //verify
         verify(bookRepository, times(1)).findById(bookId);
-        verify(bookRepository, times(1)).save(book);
+        verify(bookRepository, times(1)).save(bookFromDB);
     }
 
     @Test
@@ -398,15 +401,18 @@ public class BookServiceTest {
     }
 
     @Test
-    public void TestDeleteBookSuccessNoBorrowedCopies(){
+    public void TestDeleteBookSuccess(){
         //Set up
         Long bookId = 10L;
         String title = "Book 1";
         String author = "Author 1";
         Book book = new Book(bookId, title, author, 10, 10, 0, true, "", category);
         Book savedBook = new Book(bookId, title, author, 10, 10, 0, false, "", category);
+        BookDTO savedBookDTO = new BookDTO(bookId, title, author, 10, 10, 0, false, "", category);
+
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
         when(bookRepository.save(savedBook)).thenReturn(savedBook);
+        when(modelMapper.map(savedBook, BookDTO.class)).thenReturn(savedBookDTO);
 
         // execute
         BookDTO result = bookService.deleteBook(bookId);
@@ -446,8 +452,11 @@ public class BookServiceTest {
         String author = "Author 1";
         Book book = new Book(bookId, title, author, 10, 8, 2, true, "", category);
         Book savedBook = new Book(bookId, title, author, 10, 8, 2, false, "", category);
+        BookDTO savedBookDTO = new BookDTO(bookId, title, author, 10, 8, 2, false, "", category);
+
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
         when(bookRepository.save(savedBook)).thenReturn(savedBook);
+        when(modelMapper.map(savedBook, BookDTO.class)).thenReturn(savedBookDTO);
 
         // execute
         BookDTO result =  bookService.deleteBook(bookId);

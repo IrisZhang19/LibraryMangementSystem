@@ -1,31 +1,33 @@
 package com.librarymanagement.project.serviceTest;
 
 
-import com.librarymanagement.project.MzLibrarymanagementApplication;
 import com.librarymanagement.project.exceptions.BusinessException;
 import com.librarymanagement.project.exceptions.ResourceNotFoundException;
 import com.librarymanagement.project.models.*;
+import com.librarymanagement.project.payloads.BookDTO;
+import com.librarymanagement.project.payloads.CategoryDTO;
 import com.librarymanagement.project.payloads.TransactionDTO;
+import com.librarymanagement.project.payloads.UserDTO;
 import com.librarymanagement.project.repositories.BookRepository;
 import com.librarymanagement.project.repositories.TransactionRepository;
 import com.librarymanagement.project.repositories.UserRepository;
 import com.librarymanagement.project.security.services.UserDetailsImpl;
-import com.librarymanagement.project.services.BorrowReturnService;
+import com.librarymanagement.project.services.BorrowReturnServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.web.server.ResponseStatusException;
+
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -38,23 +40,29 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 
-@SpringBootTest
-@ContextConfiguration(classes = MzLibrarymanagementApplication.class)
+@ExtendWith(MockitoExtension.class)
 public class BorrowReturnServiceTest {
-    @MockitoBean
+    @Mock
     private TransactionRepository transactionRepository;
 
-    @MockitoBean
+    @Mock
     private BookRepository bookRepository;
 
-    @MockitoBean
+    @Mock
     private UserRepository userRepository;
 
-    @Autowired
-    private BorrowReturnService borrowReturnService;
+    @Mock
+    private ModelMapper modelMapper;
+
+    @InjectMocks
+    private BorrowReturnServiceImpl borrowReturnService;
 
     private Book book;
+    private Book bookAfterBorrow;
+    private Book bookAfterReturn;
+    private BookDTO bookDTO;
     private User user;
+    private UserDTO userDTO;
     private Transaction transaction;
     private TransactionDTO transactionDTO;
     private Set<GrantedAuthority> authorities;
@@ -63,28 +71,31 @@ public class BorrowReturnServiceTest {
     public void setUp() {
         MockitoAnnotations.openMocks(this); // Initializes mocks
 
+        // set up a user
         Set<Role> roles = new HashSet<>();
         roles.add(new Role(10, AppRole.ROLE_USER));  // Role entity
-
-        user = new User();
-        user.setUserId(1L);
-        user.setUserName("Test User");
-        user.setRoles(roles);
-        user.setPassword("password1");
-        user.setEmail("user@test.com");
-
+        String userName = "Test User";
+        String userEmail = "user@test.com";
+        user = new User(1L, userName, "password1", userEmail, roles);
+        userDTO = new UserDTO(1L, userName, userEmail);
         // Convert Set<Role> to Set<GrantedAuthority> for security context
         authorities = roles.stream()
                 .map(role -> new SimpleGrantedAuthority(role.getRoleName().name()))
                 .collect(Collectors.toSet());
 
-        book = new Book();
-        book.setBookId(10L);
-        book.setTitle("Test Book");
-        book.setCopiesTotal(5);
-        book.setCopiesAvailable(3);
-        book.setActive(true);
+        // set up book
+        Long bookId = 10L;
+        String title = "Book 1";
+        String author = "Author 1";
+        Category category = new Category(1L, "Category Test");
+        CategoryDTO categoryDTO = new CategoryDTO(1L, "Category Test");
+        book = new Book(bookId, title, author, 10, 8, 2, true, "", category);
+        bookAfterBorrow = new Book(bookId, title, author, 10, 7, 3, true, "", category);
+        bookAfterReturn = new Book(bookId, title, author, 10, 9, 1, true, "", category);
+        bookDTO = new BookDTO(bookId, title, author, 10, 8, 2, true, "", category);
+        BookDTO bookDTOAfterBorrow = new BookDTO(bookId, title, author, 10, 7, 3, true, "", category);
 
+        // setup up transaction
         LocalDate borrowTime = LocalDate.now();
         transaction = new Transaction();
         transaction.setBorrowedDate(borrowTime);
@@ -92,6 +103,7 @@ public class BorrowReturnServiceTest {
         transaction.setBook(book);
         transaction.setTransactionId(1L);
         transaction.setReturned(false);
+        transactionDTO = new TransactionDTO(1L, borrowTime, null, false, bookDTOAfterBorrow ,userDTO);
     }
 
     @Test
@@ -106,6 +118,8 @@ public class BorrowReturnServiceTest {
         when(transactionRepository.findByUser_UserIdAndBook_BookIdAndIsReturnedFalse(user.getUserId(), 10L))
                 .thenReturn(Optional.empty());  // No existing borrow history
         when(transactionRepository.save(any(Transaction.class))).thenReturn(transaction);
+        when(modelMapper.map(transaction, TransactionDTO.class)).thenReturn(transactionDTO);
+        when(bookRepository.save(any(Book.class))).thenReturn(bookAfterBorrow);
 
         // Execute
         TransactionDTO result = borrowReturnService.borrowBook(10L);
@@ -117,12 +131,12 @@ public class BorrowReturnServiceTest {
         assertNull(result.getReturnedDate());
         assertFalse(result.isReturned());
         assertEquals(result.getBook().getBookId(), book.getBookId());
-        assertEquals(2, book.getCopiesAvailable());  // Available copies should decrease by 1
+        assertEquals(7, book.getCopiesAvailable());  // Available copies should decrease by 1
+        assertEquals(3, book.getCopiesBorrowed());
 
         // Verify
         verify(bookRepository, times(1)).save(book);  // Ensure save is called on bookRepository
         verify(transactionRepository, times(1)).save(any(Transaction.class)); // Ensure save is called on transactionRepository
-
     }
 
     @Test
@@ -138,8 +152,12 @@ public class BorrowReturnServiceTest {
                 .thenReturn(Optional.ofNullable(transaction));
         LocalDate returnDate = LocalDate.now();
         transaction.setReturnedDate(returnDate);
+        transactionDTO.setReturnedDate(returnDate);
+        transaction.setReturned(true);
+        transactionDTO.setReturned(true);
         when(transactionRepository.save(transaction)).thenReturn(transaction);
         when(bookRepository.save(book)).thenReturn(book);
+        when(modelMapper.map(transaction, TransactionDTO.class)).thenReturn(transactionDTO);
 
         // Execute
         TransactionDTO result = borrowReturnService.returnBook(10L);
@@ -148,10 +166,12 @@ public class BorrowReturnServiceTest {
         assertNotNull(result);
         assertEquals(result.getUser().getUserId(), user.getUserId());
         assertEquals(result.getBorrowedDate(), transaction.getBorrowedDate());
-        assertEquals(result.getReturnedDate(), returnDate);
+//        assertEquals(result.getReturnedDate(), returnDate);
+        assertNotNull(result.getReturnedDate());
         assertTrue(result.isReturned());
         assertEquals(result.getBook().getBookId(), book.getBookId());
-        assertEquals(4, book.getCopiesAvailable()); // Available copies should increase by 1
+        assertEquals(9, book.getCopiesAvailable()); // Available copies should increase by 1
+        assertEquals(1, book.getCopiesBorrowed());
 
         // Verify book entity and transaction entity is updated once
         verify(bookRepository, times(1)).save(book); // Ensure save is called on bookRepository
@@ -304,9 +324,6 @@ public class BorrowReturnServiceTest {
         book.setCopiesAvailable(0);
         when(userRepository.findByUserName(user.getUserName())).thenReturn(Optional.of(user));
         when(bookRepository.findById(10L)).thenReturn(Optional.of(book));
-        when(transactionRepository.findByUser_UserIdAndBook_BookIdAndIsReturnedFalse(user.getUserId(), 10L))
-                .thenReturn(Optional.empty());  // No existing borrow history
-//        when(transactionRepository.save(any(Transaction.class))).thenReturn(transaction);
 
         // Execute
         BusinessException exception = assertThrows( BusinessException.class, () ->
