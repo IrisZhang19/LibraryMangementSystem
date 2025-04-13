@@ -86,7 +86,7 @@ public class AuthServiceImpl implements  AuthService{
      * @param signUpRequest contains the details of the user (username, email, password) for signup.
      * @return MessageResponse containing a success or error message.
      */
-//    @Transactional
+    @Transactional
     @Override
     public MessageResponse signupUser(SignupRequest signUpRequest) {
         // check if username and email are already exists
@@ -102,14 +102,11 @@ public class AuthServiceImpl implements  AuthService{
         User user = new User(signUpRequest.getUsername(),
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword())); // make sure password is encoded
+        // Set up user's role as user only
+        Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
+                .orElseThrow(() -> new ResourceNotFoundException("Role User not found"));
+        user.setRoles(Collections.singleton(userRole));
 
-        Set<Role> roles = new HashSet<>();
-
-            Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
-                    .orElseThrow(() -> new ResourceNotFoundException("Role User not found"));
-            roles.add(userRole);
-
-        user.setRoles(roles);
         userRepository.save(user);
         return new MessageResponse("User registered successfully!");
     }
@@ -137,9 +134,15 @@ public class AuthServiceImpl implements  AuthService{
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()));
 
+        // Set up roles for admin as user and also admin
+        Set<Role> roles = new HashSet<>();
         Role adminRole = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
                 .orElseThrow(() -> new ResourceNotFoundException("Role Admin not found"));
-        user.setRoles(Collections.singleton(adminRole));
+        Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
+                .orElseThrow(() -> new ResourceNotFoundException("Role User not found"));
+        roles.add(adminRole);
+        roles.add(userRole);
+        user.setRoles(roles);
 
         userRepository.save(user);
 

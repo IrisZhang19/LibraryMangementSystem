@@ -84,15 +84,16 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/signup").permitAll()
                                 .requestMatchers("/api/auth/signin").permitAll()
-                                .requestMatchers("/v3/api-docs/**").permitAll()
-                                .requestMatchers("/error").permitAll()
+                                .requestMatchers("/api/auth/admin/signup").hasRole("ADMIN")
                                 .requestMatchers("/api/public/**").permitAll()
-                                .requestMatchers("/h2-console/**").permitAll()
-                                .requestMatchers("/swagger-ui/**").permitAll()
-                                .requestMatchers("/api/test/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/api/borrow/**").hasRole("USER")
                                 .requestMatchers("/api/return/**").hasRole("USER")
+                                .requestMatchers("/error").permitAll()
+                                .requestMatchers("/h2-console/**").permitAll()
+                                .requestMatchers("/api/test/**").permitAll()
+                                .requestMatchers("/swagger-ui/**").permitAll()
+                                .requestMatchers("/v3/api-docs/**").permitAll()
                                 .anyRequest().authenticated()
                 );
 

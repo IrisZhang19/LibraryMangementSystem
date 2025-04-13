@@ -38,6 +38,7 @@ public class DataInitializer {
      */
     @PostConstruct
     public void init(){
+        // Create user and admin roles
         Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
                     .orElseGet(() -> {
                         Role newUserRole = new Role();
@@ -52,7 +53,7 @@ public class DataInitializer {
                 });
 
         Set<Role> userRoles = Set.of(userRole);
-        Set<Role> adminRoles = Set.of(userRole, adminRole);
+        Set<Role> adminRoles = Set.of(adminRole, userRole);
 
 
         // Create users if not already present
