@@ -218,11 +218,13 @@ public class AuthServiceTest {
         String username = "testadmin";
         String email = "test@admin.com";
         Role role = new Role(10, AppRole.ROLE_ADMIN);
+        Role roleUser = new Role(12, AppRole.ROLE_USER);
         SignupRequest signupRequest = new SignupRequest(username, email, password);
 
         when(userRepository.existsByUserName(anyString())).thenReturn(false);
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(roleRepository.findByRoleName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(role));
+        when(roleRepository.findByRoleName(AppRole.ROLE_USER)).thenReturn(Optional.of(roleUser));
         when(userRepository.save(any(User.class))).thenReturn(any(User.class));
 
         // Execute

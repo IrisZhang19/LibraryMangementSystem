@@ -142,7 +142,7 @@ public class AuthControllerTest {
         // Set up : user credentials
         String password = "password";
         String username = "testuser";
-        String email = "tet@emai.com";
+        String email = "tet@email.com";
         SignupRequest signupRequest = new SignupRequest();
         signupRequest.setUsername(username);
         signupRequest.setEmail(email);
@@ -169,17 +169,12 @@ public class AuthControllerTest {
         signupRequest.setUsername(username);
         signupRequest.setEmail(email);
         signupRequest.setPassword(password);
-        when(authService.signupAdmin(signupRequest))
-                .thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
         // Execute and verify
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/admin/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(signupRequest)))
                 .andDo(print())
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
-
-
-
 }
