@@ -14,6 +14,7 @@ allows users( library members ) to browse, borrow and return books.
 - **Pagination:** Books are retrieved with pagination when browsing and searching.
 - **Borrow and Return Function:** It allows users (members) to borrow books and return the books that they borrowed.
 
+
 ## Note on Branches
 Right now there are two branches:
 | Branch | Description |
@@ -25,7 +26,11 @@ The `submitted-version` branch reflects exactly what was submitted during the as
 ```bash
 git checkout submitted-version
 ```
-The `main` branch contains improvements.
+The `main` branch contains improvements such as 
+ - Add global exception handling and defined three different customized exceptions including ResourceNotFoundException, ValidationExceptoin and BusinessException. Refactor the relevant methods and tests to implement this handling.
+ - Update category service. Category cannot be deleted if there is still books related to it. Category should be created and updated with a unique category name ignore case. Refactor and tests for this change.
+ - Update book management and transaction service for soft deletion of books. Book will not be deleted from the database but to be set to inactive. Users cannot borrow an inactive book. Admins cannot update an inactive book. Refator and add tests for this change.
+ - Update book management. Add partial update for books with PATCH. Make sure copie_borrowed, copies_available and copies_total are inconsistant when manage the book and also borrow and return books.
 
 ## Installation
 
@@ -110,9 +115,6 @@ Admin can sign up as a new admin, provided with valid and unique username, email
     "email" : "admin@test.com"
 }
 ```
-
-
-
 ### Borrow and Return Books
 
 #### Borrow book
@@ -185,9 +187,23 @@ Admin can update an exisiting book, such as the title, the author, and the avail
     }
 }
 ```
+#### Update a Book with PATCH
+Admin can update an exisiting book, such as the title, the author, and the availablility. And it returns the updated book. 
+```http
+  PATCH /api//admin/book/{bookId}
+```
+| PathVariable | Type     | Description             |
+| :-------- | :------- | :------------------------- |
+| `bookId` | `Long` | Indicates the book to be updated|
 
+**request body**  
+```json
+{
+    "title" : "book1 title changed",
+}
+```
 #### Delete a Book
-Admin can delete an exisiting book and it returns the deleted book. 
+Admin can delete an exisiting book and it returns the deleted book. It does not delete the book in the database, it sets the book to inactive so that the users cannot borrow this book.
 ```http
   PUT /api//admin/book/{bookId}
 ```
@@ -263,10 +279,7 @@ The APIs are
 ## Next steps
 - Test more. Due to limited time, I only managed to unit test the core functions, integration testing can be added if 
 there is more time to test the whole flow of the functionalities. In addition, security testing is also important to have. 
-- Expand functionalities. For example, a signed-in user should be able to see their own borrow/return history, 
-and an admin should be able to see users' borrow/return history. 
-- Add customized exception handler. For example right now if BadRequest is encountered, 
-no specific error message is shown in the response body, a global exception handler can be added to 
-allow this function.
-- The project uses H2, an in-memory database for fast development and testing. In the future, it can be migrated 
-to a production level database. 
+- Expand functionalities. For example, a signed-in user should be able to see their own borrow and return history, 
+and an admin should be able to see users' borrow and return history. 
+- Deployment. The project uses H2, an in-memory database for fast development and testing. In the future, it can be migrated 
+to a production level database such as PostGreSQL.
