@@ -15,18 +15,8 @@ allows users( library members ) to browse, borrow and return books.
 - **Borrow and Return Function:** It allows users (members) to borrow books and return the books that they borrowed.
 
 
-## Note on Branches
-Right now there are two branches:
-| Branch | Description |
-|--------|-------------|
-| `submitted-version` | Original version submitted for the assignment |
-| `main` | Improved version after submission |
-
-The `submitted-version` branch reflects exactly what was submitted during the assignment. It can be checked out with
-```bash
-git checkout submitted-version
-```
-The `main` branch contains improvements such as 
+## Note on Updates
+Recent updates including
  - Add global exception handling and defined three different customized exceptions including ResourceNotFoundException, ValidationExceptoin and BusinessException. Refactor the relevant methods and tests to implement this handling.
  - Update category service. Category cannot be deleted if there is still books related to it. Category should be created and updated with a unique category name ignore case. Refactor and tests for this change.
  - Update book management and transaction service for soft deletion of books. Book will not be deleted from the database but to be set to inactive. Users cannot borrow an inactive book. Admins cannot update an inactive book. Refator and add tests for this change.
@@ -277,9 +267,8 @@ The APIs are
 ```
 
 ## Next steps
-- Test more. Due to limited time, I only managed to unit test the core functions, integration testing can be added if 
-there is more time to test the whole flow of the functionalities. In addition, security testing is also important to have. 
+- Test more. Right now I only managed to unit test the core functions, next step will be to have integration testing.
 - Expand functionalities. For example, a signed-in user should be able to see their own borrow and return history, 
 and an admin should be able to see users' borrow and return history. 
 - Deployment. The project uses H2, an in-memory database for fast development and testing. In the future, it can be migrated 
-to a production level database such as PostGreSQL.
+to a production level database such as PostGreSQL. And it should be containerized and deployed with a CI/CD pipeline.
